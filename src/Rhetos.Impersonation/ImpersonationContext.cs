@@ -1,21 +1,39 @@
-﻿using System;
+﻿/*
+    Copyright (C) 2014 Omega software d.o.o.
+
+    This file is part of Rhetos.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+using System;
 using System.Linq;
-using Rhetos;
 using Rhetos.Dom.DefaultConcepts;
 using Rhetos.Logging;
 using Rhetos.Security;
 using Rhetos.Utilities;
 
-namespace Impersonation
+namespace Rhetos.Impersonation
 {
-    public class ImpersonationContext : IImpersonationContext
+    public class ImpersonationContext
     {
         private readonly ILogger _logger;
         private readonly Lazy<IAuthorizationManager> _authorizationManager;
         private readonly Lazy<GenericRepository<IPrincipal>> _principals;
         private readonly Lazy<GenericRepository<ICommonClaim>> _claims;
         private readonly Lazy<IAuthorizationProvider> _authorizationProvider;
-        private readonly IBasicUserInfo _basicUserInfo;
+        private readonly IUserInfo _userInfo;
 
         public ImpersonationContext(
             ILogProvider logProvider,
@@ -23,24 +41,14 @@ namespace Impersonation
             Lazy<GenericRepository<IPrincipal>> principals,
             Lazy<GenericRepository<ICommonClaim>> claims,
             Lazy<IAuthorizationProvider> authorizationProvider,
-            IBasicUserInfo basicUserInfo)
+            IUserInfo userInfo)
         {
-            _logger = logProvider.GetLogger(typeof(ImpersonationService).Name);
+            _logger = logProvider.GetLogger("Impersonation");
             _authorizationManager = authorizationManager;
             _principals = principals;
             _claims = claims;
             _authorizationProvider = authorizationProvider;
-            _basicUserInfo = basicUserInfo;
-        }
-
-        public void CheckUserImpersonatePermission()
-        {
-            var claim = ImpersonationServiceClaims.ImpersonateClaim;
-            bool allowedImpersonate = _authorizationManager.Value.GetAuthorizations(new[] { claim }).Single();
-            if (!allowedImpersonate)
-                throw new UserException(
-                    "You are not authorized for action '{0}' on resource '{1}'. The required security claim is not set.",
-                    new object[] { claim.Right, claim.Resource }, null, null);
+            _userInfo = userInfo;
         }
 
         public void CheckImperionatedUserPermissions(string impersonatedUser)
@@ -54,8 +62,8 @@ namespace Impersonation
             if (impersonatedPrincipalId == default(Guid))
                 throw new UserException("User '{0}' is not registered.",
                     new object[] { impersonatedUser }, null, null);
-
-            var allowIncreasePermissions = _authorizationManager.Value.GetAuthorizations(new[] { ImpersonationServiceClaims.IncreasePermissionsClaim }).Single();
+            var increasePermissionsClaim = new Claim("Common.Impersonate", "IncreasePermissions");
+            var allowIncreasePermissions = _authorizationManager.Value.GetAuthorizations(new[] { increasePermissionsClaim }).Single();
             if (!allowIncreasePermissions)
             {
                 // The impersonatedUser must have subset of permissions of the impersonating user.
@@ -65,12 +73,12 @@ namespace Impersonation
                     .Select(c => new { c.ClaimResource, c.ClaimRight }).ToList()
                     .Select(c => new Claim(c.ClaimResource, c.ClaimRight)).ToList();
 
-                var impersonatedUserInfo = new TempUserInfo { UserName = impersonatedUser, Workstation = _basicUserInfo.Workstation };
+                var impersonatedUserInfo = new TempUserInfo { UserName = impersonatedUser, Workstation = _userInfo.Workstation };
                 var impersonatedUserClaims = _authorizationProvider.Value.GetAuthorizations(impersonatedUserInfo, allClaims)
                     .Zip(allClaims, (hasClaim, claim) => new { hasClaim, claim })
                     .Where(c => c.hasClaim).Select(c => c.claim).ToList();
 
-                var surplusImpersonatedClaims = _authorizationProvider.Value.GetAuthorizations(new DefaultUserInfo(_basicUserInfo), impersonatedUserClaims)
+                var surplusImpersonatedClaims = _authorizationProvider.Value.GetAuthorizations(_userInfo, impersonatedUserClaims)
                     .Zip(impersonatedUserClaims, (hasClaim, claim) => new { hasClaim, claim })
                     .Where(c => !c.hasClaim).Select(c => c.claim).ToList();
 
@@ -78,11 +86,11 @@ namespace Impersonation
                 {
                     _logger.Info(
                         "User '{0}' is not allowed to impersonate '{1}' because the impersonated user has {2} more security claims (for example '{3}'). Increase the user's permissions or add '{4}' security claim.",
-                        _basicUserInfo.UserName,
+                        _userInfo.UserName,
                         impersonatedUser,
                         surplusImpersonatedClaims.Count(),
                         surplusImpersonatedClaims.First().FullName,
-                        ImpersonationServiceClaims.IncreasePermissionsClaim.FullName);
+                        increasePermissionsClaim.FullName);
 
                     throw new UserException("You are not allowed to impersonate user '{0}'.",
                         new[] { impersonatedUser }, "See server log for more information.", null);

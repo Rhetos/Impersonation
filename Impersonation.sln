@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.136
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Impersonation", "Plugins\Impersonation\Impersonation.csproj", "{A40CFAAF-9407-4547-A4E5-A47C9EACE6AC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rhetos.Impersonation", "src\Rhetos.Impersonation\Rhetos.Impersonation.csproj", "{A40CFAAF-9407-4547-A4E5-A47C9EACE6AC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
