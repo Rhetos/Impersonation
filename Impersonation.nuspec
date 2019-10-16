@@ -1,0 +1,23 @@
+﻿<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>Impersonation</id>
+    <version>1.0.0-dev</version>
+    <authors>Omega software</authors>
+    <owners>Omega software</owners>
+    <projectUrl>https://github.com/rhetos/rhetos</projectUrl>
+    <description>This package is a plugin for Rhetos development platform.</description>
+    <copyright>Copyright Omega software 2019</copyright>
+    <tags>Rhetos plugin</tags>
+    <releaseNotes>
+</releaseNotes>
+    <dependencies>
+      <dependency id="Rhetos" version="2.9.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <!-- <file src="Source\Rhetos.ComplexEntity\bin\Debug\Rhetos.ComplexEntity.dll" target="lib\net451" /> -->
+    <!-- <file src="Source\Rhetos.ComplexEntity\bin\Debug\Rhetos.ComplexEntity.pdb" target="lib\net451" /> -->
+    <file src="Readme.md" target="" />
+  </files>
+</package>
