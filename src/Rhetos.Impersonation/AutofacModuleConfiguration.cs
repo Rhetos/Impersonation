@@ -25,7 +25,6 @@ using Rhetos.Utilities;
 namespace Rhetos.Impersonation
 {
     [Export(typeof(Module))]
-    [ExportMetadata(MefProvider.DependsOn, typeof(Rhetos.Configuration.Autofac.SecurityModuleConfiguration))]
     public class AutofacModuleConfiguration : Module
     {
         protected override void Load(ContainerBuilder builder)
