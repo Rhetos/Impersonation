@@ -6,7 +6,8 @@
     <authors>Omega software</authors>
     <owners>Omega software</owners>
     <projectUrl>https://github.com/rhetos/rhetos</projectUrl>
-    <description>This package is a plugin for Rhetos development platform.</description>
+    <description>This package is a plugin for Rhetos development platform.
+	It provides functionality for impersonating another user in order to execute something with another user's permissions (for testing purposes) and/or behalf of another user.</description>
     <copyright>Copyright Omega software 2019</copyright>
     <tags>Rhetos plugin</tags>
     <releaseNotes>
@@ -21,5 +22,6 @@
     <file src="Rhetos.Impersonation\bin\Debug\Rhetos.Impersonation.dll" target="lib\net451" />
     <file src="Rhetos.Impersonation\bin\Debug\Rhetos.Impersonation.pdb" target="lib\net451" />
     <file src="..\Readme.md" target="" />
+	<file src="Resources\**\*" target="Resources" />
   </files>
 </package>

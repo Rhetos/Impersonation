@@ -56,6 +56,9 @@
     <Reference Include="Rhetos.Extensibility.Interfaces, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Rhetos.3.0.0\lib\net472\Rhetos.Extensibility.Interfaces.dll</HintPath>
     </Reference>
+    <Reference Include="Rhetos.Interfaces">
+      <HintPath>..\..\packages\Rhetos.3.0.0\lib\net472\Rhetos.Interfaces.dll</HintPath>
+    </Reference>
     <Reference Include="Rhetos.Logging.Interfaces, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Rhetos.3.0.0\lib\net472\Rhetos.Logging.Interfaces.dll</HintPath>
     </Reference>
@@ -82,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutofacModuleConfiguration.cs" />
+    <Compile Include="HomePageSnippet.cs" />
     <Compile Include="HttpImpersonationTransport.cs" />
     <Compile Include="IImpersonatedProvider.cs" />
     <Compile Include="IImpersonationTransport.cs" />
@@ -93,6 +97,9 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
