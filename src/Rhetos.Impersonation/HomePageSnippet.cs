@@ -52,7 +52,7 @@ namespace Rhetos.Impersonation
                 var html = _snippet.Value;
                 var tagValue = "Currently <b>not</b> impersonating any user.";
 
-                string impersonatedUser = GetImpersonatedUser();
+                string impersonatedUser = HttpImpersonationTransport.GetImpersonatedUserName();
                 if (impersonatedUser != null)
                 {
                     tagValue = string.Format("<p>Currently impersonating user: <b>{0}</b>.</p>",
@@ -69,32 +69,6 @@ namespace Rhetos.Impersonation
             public string Authenticated { get; set; }
             public string Impersonated { get; set; }
             public DateTime Expires { get; set; }
-        }
-
-        public string GetImpersonatedUser()
-        {
-            if (HttpContext.Current == null)
-                return null;
-
-            var cookie = HttpContext.Current.Request.Cookies["Impersonation"];
-            if (cookie == null)
-                return null;
-
-            if (string.IsNullOrWhiteSpace(cookie.Value))
-                return null;
-
-            var bytes = Convert.FromBase64String(cookie.Value);
-            var output = System.Web.Security.MachineKey.Unprotect(bytes, "Rhetos.Impersonation");
-            if (output == null || output.Length == 0)
-                return null;
-
-            var json = Encoding.UTF8.GetString(output);
-            var impersontedInfo = JsonConvert.DeserializeObject<ImpersonationInfo>(json);
-
-            if (impersontedInfo.Expires < DateTime.Now)
-                return null;
-
-            return impersontedInfo.Impersonated;
         }
     }
 }

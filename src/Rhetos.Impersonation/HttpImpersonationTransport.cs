@@ -94,38 +94,47 @@ namespace Rhetos.Impersonation
             HttpContext.Current.Response.Cookies.Add(cookie);
         }
 
+        public static string GetImpersonatedUserName(
+            string nonHttpUserName = null,
+            string authenticatedUserName = null,
+            Action<string> slidingExpiration = null,
+            Action ticketExpired = null)
+        {
+            if (HttpContext.Current == null)
+                return nonHttpUserName;
+
+            var cookie = HttpContext.Current.Request.Cookies[Impersonation];
+            if (cookie == null)
+                return null;
+            if (string.IsNullOrWhiteSpace(cookie.Value))
+                return null;
+            var bytes = Convert.FromBase64String(cookie.Value);
+            var output = MachineKey.Unprotect(bytes, CookiePurpose);
+            if (output == null || output.Length == 0)
+                return null;
+            var json = Encoding.UTF8.GetString(output);
+            var impersontedInfo = JsonConvert.DeserializeObject<ImpersonationInfo>(json);
+            if (impersontedInfo.Expires < DateTime.Now)
+            {
+                ticketExpired?.Invoke();
+                return null;
+            }
+            if (impersontedInfo.Authenticated != authenticatedUserName && authenticatedUserName != null)
+            {
+                ticketExpired?.Invoke();
+                return null;
+            }
+            if ((DateTime.Now - impersontedInfo.Expires).TotalMinutes < CookieDurationMinutes / 2.0)
+                slidingExpiration?.Invoke(impersontedInfo.Impersonated);
+
+            return impersontedInfo.Impersonated;
+        }
+
         public string ImpersonatedUserName
         {
             get
             {
-                if (HttpContext.Current == null)
-                    return _impersonatedUser;
-
-                var cookie = HttpContext.Current.Request.Cookies[Impersonation];
-                if (cookie == null)
-                    return null;
-
-                if (string.IsNullOrWhiteSpace(cookie.Value))
-                    return null;
-
-                var bytes = Convert.FromBase64String(cookie.Value);
-                var output = MachineKey.Unprotect(bytes, CookiePurpose);
-                if (output == null || output.Length == 0)
-                    return null;
-
-                var json = Encoding.UTF8.GetString(output);
-                var impersontedInfo = JsonConvert.DeserializeObject<ImpersonationInfo>(json);
-
-                if (impersontedInfo.Expires < DateTime.Now || impersontedInfo.Authenticated != AuthenticatedUserName)
-                {
-                    RemoveImpersonation();
-                    return null;
-                }
-
-                if ((DateTime.Now - impersontedInfo.Expires).TotalMinutes < CookieDurationMinutes / 2.0)
-                    SetImpersonation(impersontedInfo.Impersonated);
-
-                return impersontedInfo.Impersonated;
+                return GetImpersonatedUserName(_impersonatedUser, AuthenticatedUserName, SetImpersonation, RemoveImpersonation);
             }
         }
     }
