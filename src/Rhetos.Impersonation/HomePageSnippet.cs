@@ -17,23 +17,18 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using Rhetos.Extensibility;
 using Rhetos.Utilities;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Web;
-using Newtonsoft.Json;
 
 namespace Rhetos.Impersonation
 {
     [Export(typeof(IHomePageSnippet))]
     public class HomePageSnippet : IHomePageSnippet
     {
-        private Lazy<string> _snippet;
+        private readonly Lazy<string> _snippet;
 
         public HomePageSnippet()
         {
@@ -46,12 +41,16 @@ namespace Rhetos.Impersonation
 
         public string Html
         {
-             get
+            get
             {
                 const string impersonatingTag = "<!-- CurrentlyImpersonatingTag -->";
                 var html = _snippet.Value;
                 var tagValue = "Currently <b>not</b> impersonating any user.";
 
+                // TODO: Remove HttpImpersonationTransport and directly use IUserInfo from DI
+                // after upgrading to Rhetos 4.0 (in nuspec). IHomePageSnippet currently cannot use
+                // IUserInfo from dependency injection context, since it is resolved from main container
+                // instead of the lifetime scope.
                 string impersonatedUser = HttpImpersonationTransport.GetImpersonatedUserName();
                 if (impersonatedUser != null)
                 {
@@ -62,13 +61,6 @@ namespace Rhetos.Impersonation
                 html = html.Replace(impersonatingTag, tagValue);
                 return html;
             }
-        }
-
-        private class ImpersonationInfo
-        {
-            public string Authenticated { get; set; }
-            public string Impersonated { get; set; }
-            public DateTime Expires { get; set; }
         }
     }
 }

@@ -30,7 +30,8 @@ namespace Rhetos.Impersonation
     public class HttpImpersonationTransport : IImpersonationTransport, IImpersonatedProvider
     {
         private readonly Lazy<IUserInfo> _userInfo;
-        //member varijabla koja se koristi kao storage u slučaju kad ne postoji HttpContex, npr. u unit testovima
+
+        // Local storage for host applications without HttpContex that do not use web security, for example unit tests.
         private string _impersonatedUser;
 
         private const string Impersonation = "Impersonation";
@@ -94,6 +95,7 @@ namespace Rhetos.Impersonation
             HttpContext.Current.Response.Cookies.Add(cookie);
         }
 
+        // TODO: After upgrading to Rhetos 4.0 and refactoring HomePageSnippet, this code can be simplified and moved back to property.
         public static string GetImpersonatedUserName(
             string nonHttpUserName = null,
             string authenticatedUserName = null,
