@@ -51,17 +51,22 @@ namespace Rhetos.Impersonation
             _userInfo = userInfo;
         }
 
-        public void CheckImperionatedUserPermissions(string impersonatedUser)
+        public void ValidateImpersonationPermissions(string impersonatedUserName)
         {
+            var impersonateClaim = new Claim("Common.Impersonate", "Impersonate");
+            var allowImpersonate = _authorizationManager.Value.GetAuthorizations(new[] { impersonateClaim }).Single();
+            if (!allowImpersonate)
+                throw new UserException($"User '{_userInfo.UserName}' doesn't have 'Impersonate' permission on 'Common.Impersonate' resource.");
+
             Guid impersonatedPrincipalId = _principals.Value
-                .Query(p => p.Name == impersonatedUser)
+                .Query(p => p.Name == impersonatedUserName)
                 .Select(p => p.ID).SingleOrDefault();
 
             // This function must be called after the user is authenticated and authorized (see CheckCurrentUserClaim),
             // otherwise the provided error information would be a security issue.
             if (impersonatedPrincipalId == default(Guid))
                 throw new UserException("User '{0}' is not registered.",
-                    new object[] { impersonatedUser }, null, null);
+                    new object[] { impersonatedUserName }, null, null);
             var increasePermissionsClaim = new Claim("Common.Impersonate", "IncreasePermissions");
             var allowIncreasePermissions = _authorizationManager.Value.GetAuthorizations(new[] { increasePermissionsClaim }).Single();
             if (!allowIncreasePermissions)
@@ -73,7 +78,7 @@ namespace Rhetos.Impersonation
                     .Select(c => new { c.ClaimResource, c.ClaimRight }).ToList()
                     .Select(c => new Claim(c.ClaimResource, c.ClaimRight)).ToList();
 
-                var impersonatedUserInfo = new TempUserInfo { UserName = impersonatedUser, Workstation = _userInfo.Workstation };
+                var impersonatedUserInfo = new TempUserInfo { UserName = impersonatedUserName, Workstation = _userInfo.Workstation };
                 var impersonatedUserClaims = _authorizationProvider.Value.GetAuthorizations(impersonatedUserInfo, allClaims)
                     .Zip(allClaims, (hasClaim, claim) => new { hasClaim, claim })
                     .Where(c => c.hasClaim).Select(c => c.claim).ToList();
@@ -87,13 +92,13 @@ namespace Rhetos.Impersonation
                     _logger.Info(
                         "User '{0}' is not allowed to impersonate '{1}' because the impersonated user has {2} more security claims (for example '{3}'). Increase the user's permissions or add '{4}' security claim.",
                         _userInfo.UserName,
-                        impersonatedUser,
+                        impersonatedUserName,
                         surplusImpersonatedClaims.Count(),
                         surplusImpersonatedClaims.First().FullName,
                         increasePermissionsClaim.FullName);
 
                     throw new UserException("You are not allowed to impersonate user '{0}'.",
-                        new[] { impersonatedUser }, "See server log for more information.", null);
+                        new[] { impersonatedUserName }, "See server log for more information.", null);
                 }
             }
         }

@@ -23,7 +23,7 @@ namespace Rhetos.Impersonation
 {
     public interface IImpersonationUserInfo : IUserInfo
     {
-        string ImpersonatedBy { get; }
-        string AuthenticatedUserName { get; }
+        bool IsImpersonated { get; }
+        string OriginalUsername { get; }
     }
 }

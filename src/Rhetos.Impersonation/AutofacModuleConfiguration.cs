@@ -1,4 +1,4 @@
-﻿/*
+/*
     Copyright (C) 2014 Omega software d.o.o.
 
     This file is part of Rhetos.
@@ -19,8 +19,6 @@
 
 using System.ComponentModel.Composition;
 using Autofac;
-using Rhetos.Extensibility;
-using Rhetos.Utilities;
 
 namespace Rhetos.Impersonation
 {
@@ -29,10 +27,7 @@ namespace Rhetos.Impersonation
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterDecorator<ImpersonationUserInfo, IUserInfo>();
-
             builder.RegisterType<ImpersonationContext>();
-            builder.RegisterType<HttpImpersonationTransport>().As<IImpersonationTransport>().As<IImpersonatedProvider>();
             base.Load(builder);
         }
     }
