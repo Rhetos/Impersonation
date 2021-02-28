@@ -21,9 +21,24 @@ using Rhetos.Utilities;
 
 namespace Rhetos.Impersonation
 {
+    /// <summary>
+    /// Extends IUserInfo with information on impersonation.
+    /// </summary>
+    /// <remarks>
+    /// Read <see cref="IsImpersonated"/> property to check if the
+    /// user <see cref="IUserInfo.UserName"/> is currently impersonated.
+    /// </remarks>
     public interface IImpersonationUserInfo : IUserInfo
     {
+        /// <summary>
+        /// Value is true if the user <see cref="IUserInfo.UserName"/> is being impersonated,
+        /// and false it the user directly provided by the main authentication plugin.
+        /// </summary>
         bool IsImpersonated { get; }
+
+        /// <summary>
+        /// Returns the originally authenticated user, provided by the main authentication plugin.
+        /// </summary>
         string OriginalUsername { get; }
     }
 }

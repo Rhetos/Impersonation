@@ -7,33 +7,43 @@ Contents:
 
 1. [Installation and configuration](#installation-and-configuration)
 2. [Usage](#usage)
+3. [Impersonated user information in other applications](#impersonated-user-information-in-other-applications)
 
 See [rhetos.org](http://www.rhetos.org/) for more information on Rhetos.
 
 ## Installation and configuration
 
-To install this package to a Rhetos server, add it to the Rhetos server's *RhetosPackages.config* file
-and make sure the NuGet package location is listed in the *RhetosPackageSources.config* file.
+Installing this package to a Rhetos web application:
 
-* The package ID is "**Rhetos.Impersonation**".
-  This package is available at the [NuGet.org](https://www.nuget.org/) online gallery.
-  The Rhetos server can install the package directly from there, if the gallery is listed in *RhetosPackageSources.config* file.
-* For more information, see [Installing plugin packages](https://github.com/Rhetos/Rhetos/wiki/Installing-plugin-packages).
+1. Add 'Rhetos.Impersonation' NuGet package, available at the [NuGet.org](https://www.nuget.org/) on-line gallery:
+2. Extend Rhetos services configuration (at `services.AddRhetos`) with the impersonation service: `.AddImpersonation()`
 
-Impersonation plugin adds 3 new claims:
+Impersonation plugin adds the following security claims:
 
 * *ClaimResource*: 'Common.Impersonate',  *ClaimRight*: 'Execute' - claim which allows authenticated user to impersonate another user.
 * *ClaimResource*: 'Common.Impersonate',  *ClaimRight*: 'IncreasePermissions' - claim which allows authenticated user to impersonate another user which has more permissions then himself.
-* *ClaimResource*: 'Common.StopImpersonating',  *ClaimRight*: 'Execute' - claim which allows impersonated user to stop impersonation. Every user in the system should have permission for this claim.
+* (version 4 and earlier) *ClaimResource*: 'Common.StopImpersonating',  *ClaimRight*: 'Execute' - claim which allows impersonated user to stop impersonation. Every user in the system should have permission for this claim.
 
 ## Usage
 
-To invoke impersonation you have to call **Common.Impersonate** action providing *UserName* parameter. Action returns **Impersonation** cookie in the response. You'll have to provide this cookie in every other request in order to impersonate another user. In order to stop impersonation you'll have to call **Common.StopImpersonating** action.
+*Rhetos.Impersonation* provides web request impersonation.
+It is not intended for in-process impersonation.
 
+To **start impersonating** another user, call *Common.Impersonate* action providing *UserName* parameter.
+The action returns *Impersonation cookie* in the web response.
+Provide this cookie in the following web requests to impersonate that user (web browser will automatically provide the cookie).
+
+In order to **stop impersonation** call *Common.StopImpersonating* action.
+
+## Impersonated user information in other applications
+
+*Version 5 and later:*
+To retrieve the original and the impersonated user information, call web method GetImpersonationInfo.
+
+*Version 4 and earlier:*
 To retrieve username of impersonated user in your MVC application, your MVC application will have to have same machine key as Rhetos application. The code which extracts impersonated username from *Impersonation* cookie is listed bellow.
 
-```csharp
-
+```cs
 private class ImpersonationInfo
 {
     public string Authenticated { get; set; }
