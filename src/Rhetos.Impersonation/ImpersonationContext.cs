@@ -53,10 +53,14 @@ namespace Rhetos.Impersonation
 
         public void ValidateImpersonationPermissions(string impersonatedUserName)
         {
-            var impersonateClaim = new Claim("Common.Impersonate", "Impersonate");
+            var impersonateClaim = new Claim("Common.Impersonate", "Execute");
             var allowImpersonate = _authorizationManager.Value.GetAuthorizations(new[] { impersonateClaim }).Single();
             if (!allowImpersonate)
-                throw new UserException($"User '{_userInfo.UserName}' doesn't have 'Impersonate' permission on 'Common.Impersonate' resource.");
+                throw new UserException(
+                    "You are not authorized for action '{0}' on resource '{1}', user '{2}'.",
+                    new[] { impersonateClaim.Right, impersonateClaim.Resource, ReportUserNameOrAnonymous(_userInfo) },
+                    null,
+                    null);
 
             Guid impersonatedPrincipalId = _principals.Value
                 .Query(p => p.Name == impersonatedUserName)
@@ -102,6 +106,8 @@ namespace Rhetos.Impersonation
                 }
             }
         }
+
+        private static string ReportUserNameOrAnonymous(IUserInfo userInfo) => userInfo.IsUserRecognized ? userInfo.UserName : "<anonymous>";
 
         private class TempUserInfo : IUserInfo
         {

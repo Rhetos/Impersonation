@@ -1,2 +1,2 @@
+CustomClaim 'Common.Impersonate' 'Execute';
 CustomClaim 'Common.Impersonate' 'IncreasePermissions';
-CustomClaim 'Common.Impersonate' 'Impersonate';
