@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Rhetos.Extensions.AspNetCore;
 using Rhetos.Extensions.RestApi.Filters;
 using Rhetos.Impersonation;
@@ -16,13 +15,12 @@ using Rhetos.Utilities;
 namespace Rhetos.Host.AspNet.Impersonation
 {
     [ServiceFilter(typeof(ApiExceptionFilter))]
-    [Route("Rest/Common/[action]")]
+    [Route("rest/Common/[action]")]
     public class ImpersonationController : ControllerBase
     {
         private readonly IUserInfo userInfo;
         private readonly ImpersonationService impersonationService;
         private readonly IRhetosComponent<ImpersonationContext> rhetosImpersonationContext;
-
 
         public ImpersonationController(IUserInfo userInfo, ImpersonationService impersonationService, IRhetosComponent<ImpersonationContext> rhetosImpersonationContext)
         {
@@ -42,7 +40,7 @@ namespace Rhetos.Host.AspNet.Impersonation
             if (string.IsNullOrWhiteSpace(impersonationModel.UserName))
                 throw new ClientException("Impersonated user name must be non-empty string.");
 
-            if (userInfo is IImpersonationUserInfo)
+            if (userInfo is IImpersonationUserInfo impersonationUser && impersonationUser.IsImpersonated)
                 throw new UserException("Can't impersonate, impersonation already active.");
 
             rhetosImpersonationContext.Value.ValidateImpersonationPermissions(impersonationModel.UserName);
@@ -57,10 +55,14 @@ namespace Rhetos.Host.AspNet.Impersonation
         }
 
         [HttpGet]
-        public ImpersonationService.ImpersonationInfo GetImpersonationInfo()
+        public PublicImpersonationInfo GetImpersonationInfo()
         {
-            var impersonationInfo = impersonationService.GetImpersonation();
-            return impersonationInfo;
+            var user = impersonationService.GetImpersonation();
+            return new PublicImpersonationInfo
+            {
+                Authenticated = user.ImpersonationInfo?.Authenticated,
+                Impersonated = user.ImpersonationInfo?.Impersonated
+            };
         }
     }
 }

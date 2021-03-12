@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.DataProtection;
+﻿using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Rhetos.Extensions.AspNetCore;
-using Rhetos.Extensions.RestApi.Utilities;
 using Rhetos.Impersonation;
 using Rhetos.Utilities;
+using System;
 
 namespace Rhetos.Host.AspNet.Impersonation
 {
@@ -33,24 +28,16 @@ namespace Rhetos.Host.AspNet.Impersonation
 
         public IUserInfo CreateUserInfo()
         {
-            var impersonationInfo = GetImpersonation();
-            var userInfo = new RhetosAspNetCoreIdentityUser(httpContextAccessor);
-            if (string.IsNullOrEmpty(impersonationInfo?.Impersonated))
-                return userInfo;
+            var user = GetImpersonation();
+            if (string.IsNullOrEmpty(user.ImpersonationInfo?.Impersonated))
+                return user.OriginalUser;
 
-            return new ImpersonatedUserInfo(impersonationInfo.Impersonated, userInfo);
+            return new ImpersonatedUserInfo(user.ImpersonationInfo.Impersonated, user.OriginalUser);
         }
 
-        public class ImpersonationInfo
+        public void SetImpersonation(IUserInfo currentUserInfo, string impersonatedUserName)
         {
-            public string Authenticated { get; set; }
-            public string Impersonated { get; set; }
-            public DateTime Expires { get; set; }
-        }
-
-        public void SetImpersonation(IUserInfo userInfo, string impersonatedUserName)
-        {
-            var authenticatedUserName = (userInfo as IImpersonationUserInfo)?.OriginalUsername ?? userInfo.UserName;
+            var authenticatedUserName = (currentUserInfo as IImpersonationUserInfo)?.OriginalUsername ?? currentUserInfo.UserName;
             logger.LogTrace($"Impersonate: {authenticatedUserName} as {impersonatedUserName}");
 
             var impersonationInfo = new ImpersonationInfo()
@@ -60,51 +47,78 @@ namespace Rhetos.Host.AspNet.Impersonation
                 Expires = DateTime.Now.AddMinutes(CookieDurationMinutes)
             };
 
-            SetCookie(impersonationInfo, false);
+            SetCookie(impersonationInfo);
         }
 
         public void RemoveImpersonation()
         {
-            var impersonationInfo = GetImpersonation();
-            if (impersonationInfo == null)
-                return;
-
-            logger.LogTrace($"StopImpersonating: {impersonationInfo.Impersonated}");
-            SetCookie(impersonationInfo, true);
+            try
+            {
+                // Reading current impersonation state for logging.
+                var impersonationInfo = GetImpersonation().ImpersonationInfo;
+                if (impersonationInfo != null)
+                    logger.LogTrace($"StopImpersonating: {impersonationInfo.Authenticated} as {impersonationInfo.Impersonated}");
+            }
+            catch (Exception e)
+            {
+                logger.LogTrace(e, "Previous impersonation state not valid on " + nameof(RemoveImpersonation) + ".");
+            }
+            
+            // RemoveImpersonation should remove the impersonation cookie, even if the current impersonation state is invalid,
+            // for example if the user has already logged out with the main authentication method, or if the user has logged in with a different account.
+            RemoveImpersonationCookie();
         }
 
-        public ImpersonationInfo GetImpersonation()
+        public (ImpersonationInfo ImpersonationInfo, IUserInfo OriginalUser) GetImpersonation()
         {
+            var originalUser = new RhetosAspNetCoreIdentityUser(httpContextAccessor);
+
             var cookie = httpContextAccessor.HttpContext.Request.Cookies[Impersonation];
 
             if (string.IsNullOrWhiteSpace(cookie))
-                return null;
+                return (null, originalUser);
 
             var protector = dataProtectionProvider.CreateProtector(CookiePurpose);
             var unprotected = protector.Unprotect(cookie);
 
             var impersonationInfo = JsonConvert.DeserializeObject<ImpersonationInfo>(unprotected);
             if (impersonationInfo == null)
-                return null;
+                return (null, originalUser);
 
             if (impersonationInfo.Expires < DateTime.Now)
-                return null;
+                return (null, originalUser);
+
+            if (!originalUser.IsUserRecognized || originalUser.UserName != impersonationInfo.Authenticated)
+            {
+                RemoveImpersonationCookie();
+                return (null, originalUser);
+            }
 
             if ((DateTime.Now - impersonationInfo.Expires).TotalMinutes < CookieDurationMinutes / 2.0)
             {
                 impersonationInfo.Expires = DateTime.Now.AddMinutes(CookieDurationMinutes);
-                SetCookie(impersonationInfo, false);
+                SetCookie(impersonationInfo);
             }
 
-            return impersonationInfo;
+            return (impersonationInfo, originalUser);
         }
 
-        private void SetCookie(ImpersonationInfo impersonationInfo, bool expire)
+        private void RemoveImpersonationCookie()
+        {
+            AppendCookie(new ImpersonationInfo(), remove: true);
+        }
+
+        private void SetCookie(ImpersonationInfo impersonationInfo)
+        {
+            AppendCookie(impersonationInfo, remove: false);
+        }
+
+        private void AppendCookie(ImpersonationInfo impersonationInfo, bool remove)
         {
             var json = JsonConvert.SerializeObject(impersonationInfo);
             var protector = dataProtectionProvider.CreateProtector(CookiePurpose);
             var encryptedValue = protector.Protect(json);
-            var expires = expire ? DateTimeOffset.Now.AddDays(-10) : (DateTimeOffset?)null;
+            var expires = remove ? DateTimeOffset.Now.AddDays(-10) : (DateTimeOffset?)null;
             httpContextAccessor.HttpContext.Response.Cookies.Append(Impersonation, encryptedValue, new CookieOptions() { HttpOnly = true, Expires = expires });
         }
     }
