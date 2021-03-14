@@ -29,19 +29,23 @@ namespace Rhetos.Host.AspNet.Impersonation
 {
     public class ImpersonationService
     {
-        private const string Impersonation = "Impersonation";
+        public static readonly string CookieKey = "Impersonation";
         private const string CookiePurpose = "Rhetos.Impersonation";
-        private static int CookieDurationMinutes = 60;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IDataProtectionProvider dataProtectionProvider;
-        private readonly ILogger<ImpersonationController> logger;
+        private readonly ILogger<ImpersonationService> logger;
+        private readonly ImpersonationOptions options;
 
-        public ImpersonationService(IHttpContextAccessor httpContextAccessor, IDataProtectionProvider dataProtectionProvider,
-            ILogger<ImpersonationController> logger)
+        public ImpersonationService(
+            IHttpContextAccessor httpContextAccessor,
+            IDataProtectionProvider dataProtectionProvider,
+            ILogger<ImpersonationService> logger,
+            ImpersonationOptions options)
         {
             this.httpContextAccessor = httpContextAccessor;
             this.dataProtectionProvider = dataProtectionProvider;
             this.logger = logger;
+            this.options = options;
         }
 
         public IUserInfo CreateUserInfo()
@@ -62,7 +66,7 @@ namespace Rhetos.Host.AspNet.Impersonation
             {
                 Authenticated = authenticatedUserName,
                 Impersonated = impersonatedUserName,
-                Expires = DateTime.Now.AddMinutes(CookieDurationMinutes)
+                Expires = DateTime.Now.AddMinutes(options.CookieDurationMinutes)
             };
 
             SetCookie(impersonationInfo);
@@ -91,19 +95,16 @@ namespace Rhetos.Host.AspNet.Impersonation
         {
             var originalUser = new RhetosAspNetCoreIdentityUser(httpContextAccessor);
 
-            var cookie = httpContextAccessor.HttpContext.Request.Cookies[Impersonation];
+            var encryptedValue = httpContextAccessor.HttpContext.Request.Cookies[CookieKey];
 
-            if (string.IsNullOrWhiteSpace(cookie))
+            if (string.IsNullOrWhiteSpace(encryptedValue))
                 return (null, originalUser);
 
-            var protector = dataProtectionProvider.CreateProtector(CookiePurpose);
-            var unprotected = protector.Unprotect(cookie);
-
-            var impersonationInfo = JsonConvert.DeserializeObject<ImpersonationInfo>(unprotected);
+            var impersonationInfo = DecryptValue(encryptedValue);
             if (impersonationInfo == null)
                 return (null, originalUser);
 
-            if (impersonationInfo.Expires < DateTime.Now)
+            if (DateTime.Now > impersonationInfo.Expires)
                 return (null, originalUser);
 
             if (!originalUser.IsUserRecognized || originalUser.UserName != impersonationInfo.Authenticated)
@@ -112,9 +113,11 @@ namespace Rhetos.Host.AspNet.Impersonation
                 return (null, originalUser);
             }
 
-            if ((DateTime.Now - impersonationInfo.Expires).TotalMinutes < CookieDurationMinutes / 2.0)
+            // Sliding expiration: The cookie expiration time is updated when more than half the specified time has elapsed.
+            DateTime cookieCreated = impersonationInfo.Expires.AddMinutes(-options.CookieDurationMinutes);
+            if ((DateTime.Now - cookieCreated).TotalMinutes > options.CookieDurationMinutes / 2.0)
             {
-                impersonationInfo.Expires = DateTime.Now.AddMinutes(CookieDurationMinutes);
+                impersonationInfo.Expires = DateTime.Now.AddMinutes(options.CookieDurationMinutes);
                 SetCookie(impersonationInfo);
             }
 
@@ -133,11 +136,26 @@ namespace Rhetos.Host.AspNet.Impersonation
 
         private void AppendCookie(ImpersonationInfo impersonationInfo, bool remove)
         {
+            string encryptedValue = EncryptValue(impersonationInfo);
+            var expires = remove ? DateTimeOffset.Now.AddDays(-10) : (DateTimeOffset?)null;
+            httpContextAccessor.HttpContext.Response.Cookies.Append(CookieKey, encryptedValue, new CookieOptions() { HttpOnly = true, Expires = expires });
+        }
+
+        private string EncryptValue(ImpersonationInfo impersonationInfo)
+        {
             var json = JsonConvert.SerializeObject(impersonationInfo);
             var protector = dataProtectionProvider.CreateProtector(CookiePurpose);
             var encryptedValue = protector.Protect(json);
-            var expires = remove ? DateTimeOffset.Now.AddDays(-10) : (DateTimeOffset?)null;
-            httpContextAccessor.HttpContext.Response.Cookies.Append(Impersonation, encryptedValue, new CookieOptions() { HttpOnly = true, Expires = expires });
+            return encryptedValue;
+        }
+
+        private ImpersonationInfo DecryptValue(string encryptedValue)
+        {
+            var protector = dataProtectionProvider.CreateProtector(CookiePurpose);
+            var unprotected = protector.Unprotect(encryptedValue);
+
+            var impersonationInfo = JsonConvert.DeserializeObject<ImpersonationInfo>(unprotected);
+            return impersonationInfo;
         }
     }
 }

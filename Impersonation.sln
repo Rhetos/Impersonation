@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rhetos.Impersonation", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rhetos.Host.AspNet.Impersonation", "src\Rhetos.Host.AspNet.Impersonation\Rhetos.Host.AspNet.Impersonation.csproj", "{1F03B9FA-5697-4216-AE56-85119232D5F0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rhetos.Impersonation.Test", "test\Rhetos.Impersonation.Test\Rhetos.Impersonation.Test.csproj", "{0A466C39-2CD7-48B8-A0A8-5686D495942B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{1F03B9FA-5697-4216-AE56-85119232D5F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F03B9FA-5697-4216-AE56-85119232D5F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1F03B9FA-5697-4216-AE56-85119232D5F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A466C39-2CD7-48B8-A0A8-5686D495942B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A466C39-2CD7-48B8-A0A8-5686D495942B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A466C39-2CD7-48B8-A0A8-5686D495942B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A466C39-2CD7-48B8-A0A8-5686D495942B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

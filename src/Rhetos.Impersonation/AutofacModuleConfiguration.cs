@@ -19,6 +19,7 @@
 
 using System.ComponentModel.Composition;
 using Autofac;
+using Rhetos.Utilities;
 
 namespace Rhetos.Impersonation
 {
@@ -28,6 +29,7 @@ namespace Rhetos.Impersonation
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterType<ImpersonationContext>();
+            builder.Register(context => context.Resolve<IConfiguration>().GetOptions<ImpersonationOptions>()).SingleInstance();
             base.Load(builder);
         }
     }

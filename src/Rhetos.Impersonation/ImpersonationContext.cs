@@ -97,7 +97,7 @@ namespace Rhetos.Impersonation
                         "User '{0}' is not allowed to impersonate '{1}' because the impersonated user has {2} more security claims (for example '{3}'). Increase the user's permissions or add '{4}' security claim.",
                         _userInfo.UserName,
                         impersonatedUserName,
-                        surplusImpersonatedClaims.Count(),
+                        surplusImpersonatedClaims.Count,
                         surplusImpersonatedClaims.First().FullName,
                         increasePermissionsClaim.FullName);
 
