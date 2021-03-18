@@ -19,16 +19,19 @@
 
 using Microsoft.Extensions.Logging;
 using Rhetos.Host.AspNet.Impersonation;
-using Rhetos.TestCommon;
+using Rhetos.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
 namespace Rhetos.Impersonation.Test
 {
-    public static class ImpersonationHelper
+    /// <summary>
+    /// Calls <see cref="ImpersonationService"/> methods, with input and output data provided conveniently for testing.
+    /// </summary>
+    public static class ImpersonationServiceHelper
     {
-        public static FakeCookie GetImpersonationCookie(TestUserInfo testUser, string impersonateUserName, ImpersonationOptions options = null)
+        public static FakeCookie SetImpersonation(IUserInfo testUser, string impersonateUserName, ImpersonationOptions options = null)
         {
             (var impersonationService, var httpContextAccessor, _) = CreateImpersonationService(testUser, options);
             impersonationService.SetImpersonation(testUser, impersonateUserName);
@@ -52,10 +55,10 @@ namespace Rhetos.Impersonation.Test
         }
 
         public static (ImpersonationService ImpersonationService, FakeHttpContextAccessor HttpContextAccessor, List<string> Log)
-            CreateImpersonationService(TestUserInfo testUser, ImpersonationOptions options = null)
+            CreateImpersonationService(IUserInfo testUser, ImpersonationOptions options = null)
         {
             options ??= new ImpersonationOptions();
-            var httpContextAccessor = new FakeHttpContextAccessor(testUser?.UserName);
+            var httpContextAccessor = new FakeHttpContextAccessor(testUser?.IsUserRecognized == true ? testUser.UserName : null);
             var dataProtectionProvider = new FakeDataProtectionProvider();
             var logMonitor = new LogMonitor();
             var logger = LoggerFactory
@@ -71,17 +74,17 @@ namespace Rhetos.Impersonation.Test
         }
 
         public static (ImpersonationService.AuthenticationInfo AuthenticationInfo, FakeCookie ResponseCookie, List<string> Log)
-            TestGetAuthenticationInfo(TestUserInfo testUser, FakeCookie requestCookie)
+            GetAuthenticationInfo(IUserInfo testUser, FakeCookie requestCookie)
         {
-            (var impersonationService, var httpContext, var log) = ImpersonationHelper.CreateImpersonationService(testUser);
+            (var impersonationService, var httpContext, var log) = CreateImpersonationService(testUser);
             httpContext.RequestCookies.Add(requestCookie);
             return (impersonationService.GetAuthenticationInfo(), httpContext.ResponseCookies.SingleOrDefault(), log);
         }
 
         public static (FakeCookie ResponseCookie, List<string> Log)
-            TestRemoveImpersonation(TestUserInfo testUser, FakeCookie requestCookie)
+            RemoveImpersonation(IUserInfo testUser, FakeCookie requestCookie)
         {
-            (var impersonationService, var httpContext, var log) = ImpersonationHelper.CreateImpersonationService(testUser);
+            (var impersonationService, var httpContext, var log) = CreateImpersonationService(testUser);
             httpContext.RequestCookies.Add(requestCookie);
             impersonationService.RemoveImpersonation();
             return (httpContext.ResponseCookies.SingleOrDefault(), log);

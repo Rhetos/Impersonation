@@ -53,6 +53,9 @@ namespace Rhetos.Impersonation
 
         public void ValidateImpersonationPermissions(string impersonatedUserName)
         {
+            if (!_userInfo.IsUserRecognized)
+                throw new UserException("You are not authorized for impersonation. Please log in first.");
+
             var impersonateClaim = new Claim("Common.Impersonate", "Execute");
             var allowImpersonate = _authorizationManager.Value.GetAuthorizations(new[] { impersonateClaim }).Single();
             if (!allowImpersonate)

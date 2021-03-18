@@ -51,7 +51,7 @@ namespace Rhetos.Impersonation.Test
             var fakePrincipal = new ClaimsPrincipal(new FakeIdentity
             {
                 AuthenticationType = "FakeAuthentication",
-                IsAuthenticated = !string.IsNullOrEmpty(username),
+                IsAuthenticated = username != null, // Intentionally allowing empty username, for testing the robustness of impersonation process.
                 Name = username
             });
             var fakeConnection = !string.IsNullOrEmpty(ip)

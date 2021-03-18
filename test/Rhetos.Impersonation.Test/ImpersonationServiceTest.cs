@@ -34,9 +34,9 @@ namespace Rhetos.Impersonation.Test
         [TestMethod]
         public void NoImpersonation()
         {
-            var testUser = new TestUserInfo("TestUser");
+            var testUser = new FakeUserInfo("TestUser");
 
-            var impersonationService = ImpersonationHelper.CreateImpersonationService(testUser).ImpersonationService;
+            var impersonationService = ImpersonationServiceHelper.CreateImpersonationService(testUser).ImpersonationService;
 
             var user = impersonationService.GetAuthenticationInfo();
             Assert.AreEqual(
@@ -47,23 +47,33 @@ namespace Rhetos.Impersonation.Test
         [TestMethod]
         public void SimpleImpersonation()
         {
-            var testUser = new TestUserInfo("TestUser");
+            var testUser = new FakeUserInfo("TestUser");
             var impersonateUserName = "TestImpersonatedUser";
+            var cookie = ImpersonationServiceHelper.SetImpersonation(testUser, impersonateUserName);
 
-            (var impersonationService, var httpContext, _) = ImpersonationHelper.CreateImpersonationService(testUser);
-
-            var cookie = ImpersonationHelper.GetImpersonationCookie(testUser, impersonateUserName);
+            (var impersonationService, var httpContext, _) = ImpersonationServiceHelper.CreateImpersonationService(testUser);
             httpContext.RequestCookies.Add(cookie);
-
             var user = impersonationService.GetAuthenticationInfo();
+
             Assert.AreEqual(
                 "TestUser as TestImpersonatedUser, original TestUser",
                 ReportImpersonationStatus(user));
         }
 
+        [TestMethod]
+        public void SetImpersonationAnonymous()
+        {
+            var testUser = new FakeUserInfo(null, null, false);
+            var impersonateUserName = "TestImpersonatedUser";
+
+            TestUtility.ShouldFail<UserException>(
+                () => ImpersonationServiceHelper.SetImpersonation(testUser, impersonateUserName),
+                "You are not authorized");
+        }
+
         private static string ReportImpersonationStatus(ImpersonationService.AuthenticationInfo user)
         {
-            return $"{ReportImpersonationInfo(user.ImpersonationInfo)}, original {user.OriginalUser.UserName}";
+            return $"{ReportImpersonationInfo(user.ImpersonationInfo)}, original {(user.OriginalUser.IsUserRecognized ? user.OriginalUser.UserName : "not recognized")}";
         }
 
         private static string ReportImpersonationInfo(ImpersonationInfo impersonationInfo)
@@ -77,25 +87,24 @@ namespace Rhetos.Impersonation.Test
         [TestMethod]
         public void StopImpersonating()
         {
-            var testUser = new TestUserInfo("TestUser");
+            var initialUser = new FakeUserInfo("TestUser");
             var impersonateUserName = "TestImpersonatedUser";
-
-            var initialCookie = ImpersonationHelper.GetImpersonationCookie(testUser, impersonateUserName);
+            var initialCookie = ImpersonationServiceHelper.SetImpersonation(initialUser, impersonateUserName);
 
             // Review test setup:
 
             Assert.AreEqual(
                 "TestUser as TestImpersonatedUser, original TestUser",
-                ReportImpersonationStatus(ImpersonationHelper.TestGetAuthenticationInfo(testUser, initialCookie).AuthenticationInfo));
+                ReportImpersonationStatus(ImpersonationServiceHelper.GetAuthenticationInfo(initialUser, initialCookie).AuthenticationInfo));
 
             // Stopping impersonation should expire the impersonation cookie:
 
-            (var responseCookie, var log) = ImpersonationHelper.TestRemoveImpersonation(testUser, initialCookie);
+            (var responseCookie, var log) = ImpersonationServiceHelper.RemoveImpersonation(initialUser, initialCookie);
 
             AssertIsBefore(responseCookie.Options.Expires.Value, DateTimeOffset.Now.AddSeconds(-1));
             Assert.AreEqual(ImpersonationService.CookieKey, responseCookie.Key);
             Assert.AreEqual(" as ",
-                ReportImpersonationInfo(ImpersonationHelper.DecryptCookieValue(responseCookie.Value))); // No need for impersonation data in the cookie.
+                ReportImpersonationInfo(ImpersonationServiceHelper.DecryptCookieValue(responseCookie.Value))); // No need for impersonation data in the cookie.
 
             TestUtility.AssertContains(
                 string.Join(Environment.NewLine, log),
@@ -105,94 +114,183 @@ namespace Rhetos.Impersonation.Test
 
             Assert.AreEqual(
                 "No impersonation, original TestUser",
-                ReportImpersonationStatus(ImpersonationHelper.TestGetAuthenticationInfo(testUser, responseCookie).AuthenticationInfo));
+                ReportImpersonationStatus(ImpersonationServiceHelper.GetAuthenticationInfo(initialUser, responseCookie).AuthenticationInfo));
         }
 
         [TestMethod]
-        public void StopImpersonating_UnexpectedUser()
+        public void AuthenticationContextChanged_DifferentUser()
         {
-            var initialUser = new TestUserInfo("InitialUser"); // User than started the impersonation.
-            var currentlyAuthenticatedUser = new TestUserInfo("CurrentUser"); // Currently authenticated user does not match the initial user, so the impersonation cookie is invalid.
+            var initialUser = new FakeUserInfo("InitialUser"); // User than started the impersonation.
+            var currentlyAuthenticatedUser = new FakeUserInfo("CurrentUser"); // Currently authenticated user does not match the initial user, so the impersonation cookie is invalid.
             var impersonateUserName = "TestImpersonatedUser";
+            var initialCookie = ImpersonationServiceHelper.SetImpersonation(initialUser, impersonateUserName);
 
-            var initialCookie = ImpersonationHelper.GetImpersonationCookie(initialUser, impersonateUserName);
+            // Authentication process should invalidate the impersonation, because the user context has changed.
 
-            (var impersonationService, var httpContext, var log) = ImpersonationHelper.CreateImpersonationService(currentlyAuthenticatedUser);
-            httpContext.RequestCookies.Add(initialCookie);
+            var authResponse = ImpersonationServiceHelper.GetAuthenticationInfo(currentlyAuthenticatedUser, initialCookie);
 
-            // Review test setup:
             Assert.AreEqual(
                 "No impersonation, original CurrentUser", // Impersonation is not valid, since the current user does not match the initial user that started the impersonation.
-                ReportImpersonationStatus(impersonationService.GetAuthenticationInfo()));
+                ReportImpersonationStatus(authResponse.AuthenticationInfo));
             TestUtility.AssertContains(
-                string.Join(Environment.NewLine, log),
+                string.Join(Environment.NewLine, authResponse.Log),
                 "Removing impersonation, the current authentication context (CurrentUser) does not match the initial one (InitialUser).");
-            var responseCookie = httpContext.ResponseCookies.Single();
-            AssertIsBefore(responseCookie.Options.Expires.Value, DateTimeOffset.Now.AddSeconds(-1));
-            Assert.AreEqual(ImpersonationService.CookieKey, responseCookie.Key);
+            AssertIsBefore(authResponse.ResponseCookie.Options.Expires.Value, DateTimeOffset.Now.AddSeconds(-1));
+            Assert.AreEqual(ImpersonationService.CookieKey, authResponse.ResponseCookie.Key);
+        }
+
+        [TestMethod]
+        public void StopImpersonating_DifferentUser()
+        {
+            var initialUser = new FakeUserInfo("InitialUser"); // User than started the impersonation.
+            var currentlyAuthenticatedUser = new FakeUserInfo("CurrentUser"); // Currently authenticated user does not match the initial user, so the impersonation cookie is invalid.
+            var impersonateUserName = "TestImpersonatedUser";
+            var initialCookie = ImpersonationServiceHelper.SetImpersonation(initialUser, impersonateUserName);
 
             // Stopping impersonation should expire the impersonation cookie, even if the authentication context is invalid:
 
-            log.Clear();
-            httpContext.ResponseCookies.Clear();
-            impersonationService.RemoveImpersonation();
+            var removeResponse = ImpersonationServiceHelper.RemoveImpersonation(currentlyAuthenticatedUser, initialCookie);
 
-            // Impersonation cookie should be marked as expired, even if the authentication context is invalid:
-
-            responseCookie = httpContext.ResponseCookies.Single();
-            AssertIsBefore(responseCookie.Options.Expires.Value, DateTimeOffset.Now.AddSeconds(-1));
-            Assert.AreEqual(ImpersonationService.CookieKey, responseCookie.Key);
+            AssertIsBefore(removeResponse.ResponseCookie.Options.Expires.Value, DateTimeOffset.Now.AddSeconds(-1));
+            Assert.AreEqual(ImpersonationService.CookieKey, removeResponse.ResponseCookie.Key);
             Assert.AreEqual(" as ",
-                ReportImpersonationInfo(ImpersonationHelper.DecryptCookieValue(responseCookie.Value))); // No need for impersonation data in the cookie.
-
+                ReportImpersonationInfo(ImpersonationServiceHelper.DecryptCookieValue(removeResponse.ResponseCookie.Value))); // No need for impersonation data in the cookie.
             TestUtility.AssertContains(
-                string.Join(Environment.NewLine, log),
-                "REVIEWWWWWWWWWWW Previous impersonation state not valid on RemoveImpersonation.");
+                string.Join(Environment.NewLine, removeResponse.Log),
+                "Removing impersonation, the current authentication context (CurrentUser) does not match the initial one (InitialUser).");
 
             // Next request with expired cookie should be without impersonation, even if the expired cookie is sent again.
 
-            log.Clear();
-            httpContext.RequestCookies.Clear();
-            httpContext.RequestCookies.Add(responseCookie);
+            var authResponseAfterRemove = ImpersonationServiceHelper.GetAuthenticationInfo(currentlyAuthenticatedUser, removeResponse.ResponseCookie);
+
             Assert.AreEqual(
                 "No impersonation, original CurrentUser",
-                ReportImpersonationStatus(impersonationService.GetAuthenticationInfo()));
+                ReportImpersonationStatus(authResponseAfterRemove.AuthenticationInfo));
+            Assert.IsNull(authResponseAfterRemove.ResponseCookie, "There is no need to send the expired cookie again, client already has the expired one.");
+        }
+
+        [TestMethod]
+        public void AuthenticationContextChanged_NullUser()
+        {
+            var initialUser = new FakeUserInfo("InitialUser"); // User than started the impersonation.
+            var currentlyAuthenticatedUser = new FakeUserInfo(null, null, false); // For example, if the user logged out.
+            var impersonateUserName = "TestImpersonatedUser";
+            var initialCookie = ImpersonationServiceHelper.SetImpersonation(initialUser, impersonateUserName);
+
+            // Authentication process should invalidate the impersonation, because the user in no longer authenticated.
+
+            var authResponse = ImpersonationServiceHelper.GetAuthenticationInfo(currentlyAuthenticatedUser, initialCookie);
+
+            Assert.AreEqual(
+                "No impersonation, original not recognized", // Impersonation is not valid, since the current user does not match the initial user that started the impersonation.
+                ReportImpersonationStatus(authResponse.AuthenticationInfo));
             TestUtility.AssertContains(
-                string.Join(Environment.NewLine, log),
-                "REVIEWWWWWWWWWWW CINI MI SE DA NE MORA PONOVO GENERIRATI EXPIRED COOKIE  => AssertNotContains?, IAKO ZAPRAVO OCEKUJEMO DA BROWSER NA SMIJE UPORNO SLATI EXPIRED COOKIEJE.");
+                string.Join(Environment.NewLine, authResponse.Log),
+                "Removing impersonation, the original user is no longer authenticated.");
+            AssertIsBefore(authResponse.ResponseCookie.Options.Expires.Value, DateTimeOffset.Now.AddSeconds(-1));
+            Assert.AreEqual(ImpersonationService.CookieKey, authResponse.ResponseCookie.Key);
         }
 
         [TestMethod]
         public void StopImpersonating_NullUser()
         {
-            // "Removing impersonation, the original user is no longer authenticated."
-            throw new NotImplementedException();
+            var initialUser = new FakeUserInfo("InitialUser"); // User than started the impersonation.
+            var currentlyAuthenticatedUser = new FakeUserInfo(null, null, false); // For example, if the user logged out.
+            var impersonateUserName = "TestImpersonatedUser";
+            var initialCookie = ImpersonationServiceHelper.SetImpersonation(initialUser, impersonateUserName);
+
+            // Stopping impersonation should expire the impersonation cookie, even if the authentication context is invalid:
+
+            var removeResponse = ImpersonationServiceHelper.RemoveImpersonation(currentlyAuthenticatedUser, initialCookie);
+
+            AssertIsBefore(removeResponse.ResponseCookie.Options.Expires.Value, DateTimeOffset.Now.AddSeconds(-1));
+            Assert.AreEqual(ImpersonationService.CookieKey, removeResponse.ResponseCookie.Key);
+            Assert.AreEqual(" as ",
+                ReportImpersonationInfo(ImpersonationServiceHelper.DecryptCookieValue(removeResponse.ResponseCookie.Value))); // No need for impersonation data in the cookie.
+            TestUtility.AssertContains(
+                string.Join(Environment.NewLine, removeResponse.Log),
+                "Removing impersonation, the original user is no longer authenticated.");
+
+            // Next request with expired cookie should be without impersonation, even if the expired cookie is sent again.
+
+            var authResponseAfterRemove = ImpersonationServiceHelper.GetAuthenticationInfo(currentlyAuthenticatedUser, removeResponse.ResponseCookie);
+
+            Assert.AreEqual(
+                "No impersonation, original not recognized",
+                ReportImpersonationStatus(authResponseAfterRemove.AuthenticationInfo));
+            Assert.IsNull(authResponseAfterRemove.ResponseCookie, "There is no need to send the expired cookie again, client already has the expired one.");
+        }
+
+        [TestMethod]
+        public void AuthenticationContextChanged_EmptyUser()
+        {
+            var initialUser = new FakeUserInfo("InitialUser"); // User than started the impersonation.
+            var currentlyAuthenticatedUser = new FakeUserInfo("", "", true); // Unexpected authentication context, similar to anonymous user. Testing for robust impersonation management.
+            var impersonateUserName = "TestImpersonatedUser";
+            var initialCookie = ImpersonationServiceHelper.SetImpersonation(initialUser, impersonateUserName);
+
+            // Authentication process should invalidate the impersonation, because the user in no longer authenticated.
+
+            var authResponse = ImpersonationServiceHelper.GetAuthenticationInfo(currentlyAuthenticatedUser, initialCookie);
+
+            Assert.AreEqual(
+                "No impersonation, original not recognized",
+                ReportImpersonationStatus(authResponse.AuthenticationInfo));
+            TestUtility.AssertContains(
+                string.Join(Environment.NewLine, authResponse.Log),
+                "Removing impersonation, the original user is no longer authenticated.");
+            AssertIsBefore(authResponse.ResponseCookie.Options.Expires.Value, DateTimeOffset.Now.AddSeconds(-1));
+            Assert.AreEqual(ImpersonationService.CookieKey, authResponse.ResponseCookie.Key);
         }
 
         [TestMethod]
         public void StopImpersonating_EmptyUser()
         {
-            throw new NotImplementedException();
+            var initialUser = new FakeUserInfo("InitialUser"); // User than started the impersonation.
+            var currentlyAuthenticatedUser = new FakeUserInfo("", "", true); // Unexpected authentication context, similar to anonymous user. Testing for robust impersonation management.
+            var impersonateUserName = "TestImpersonatedUser";
+            var initialCookie = ImpersonationServiceHelper.SetImpersonation(initialUser, impersonateUserName);
+
+            // Stopping impersonation should expire the impersonation cookie, even if the authentication context is invalid:
+
+            var removeResponse = ImpersonationServiceHelper.RemoveImpersonation(currentlyAuthenticatedUser, initialCookie);
+
+            AssertIsBefore(removeResponse.ResponseCookie.Options.Expires.Value, DateTimeOffset.Now.AddSeconds(-1));
+            Assert.AreEqual(ImpersonationService.CookieKey, removeResponse.ResponseCookie.Key);
+            Assert.AreEqual(" as ",
+                ReportImpersonationInfo(ImpersonationServiceHelper.DecryptCookieValue(removeResponse.ResponseCookie.Value))); // No need for impersonation data in the cookie.
+            TestUtility.AssertContains(
+                string.Join(Environment.NewLine, removeResponse.Log),
+                "Removing impersonation, the original user is no longer authenticated.");
+
+            // Next request with expired cookie should be without impersonation, even if the expired cookie is sent again.
+
+            var authResponseAfterRemove = ImpersonationServiceHelper.GetAuthenticationInfo(currentlyAuthenticatedUser, removeResponse.ResponseCookie);
+
+            Assert.AreEqual(
+                "No impersonation, original not recognized",
+                ReportImpersonationStatus(authResponseAfterRemove.AuthenticationInfo));
+            Assert.IsNull(authResponseAfterRemove.ResponseCookie, "There is no need to send the expired cookie again, client already has the expired one.");
         }
 
         [TestMethod]
         public void RenewCookieAfterHalfExpirationTime_HalfTimeHasNotPassed()
         {
-            var testUser = new TestUserInfo("TestUser");
+            var testUser = new FakeUserInfo("TestUser");
             var impersonateUserName = "TestImpersonatedUser";
 
             var options = new ImpersonationOptions { CookieDurationMinutes = 3 };
 
-            var cookie = ImpersonationHelper.GetImpersonationCookie(testUser, impersonateUserName, options);
-            var impersonationInfo = ImpersonationHelper.DecryptCookieValue(cookie.Value);
+            var cookie = ImpersonationServiceHelper.SetImpersonation(testUser, impersonateUserName, options);
+            var impersonationInfo = ImpersonationServiceHelper.DecryptCookieValue(cookie.Value);
             AssertIsWithinOneSecond(DateTime.Now.AddMinutes(options.CookieDurationMinutes), impersonationInfo.Expires); // Reviewing the test setup.
 
             // Half-time has not passed:
 
             impersonationInfo.Expires = DateTime.Now.AddMinutes(options.CookieDurationMinutes / 2.0).AddSeconds(1);
-            cookie.Value = ImpersonationHelper.EncryptCookieValue(impersonationInfo);
+            cookie.Value = ImpersonationServiceHelper.EncryptCookieValue(impersonationInfo);
 
-            (var impersonationService, var httpContext, _) = ImpersonationHelper.CreateImpersonationService(testUser, options);
+            (var impersonationService, var httpContext, _) = ImpersonationServiceHelper.CreateImpersonationService(testUser, options);
             httpContext.RequestCookies.Add(cookie);
 
             var user = impersonationService.GetAuthenticationInfo();
@@ -209,13 +307,13 @@ namespace Rhetos.Impersonation.Test
         [TestMethod]
         public void RenewCookieAfterHalfExpirationTime_HalfTimeHasPassed()
         {
-            var testUser = new TestUserInfo("TestUser");
+            var testUser = new FakeUserInfo("TestUser");
             var impersonateUserName = "TestImpersonatedUser";
 
             var options = new ImpersonationOptions { CookieDurationMinutes = 3 };
 
-            var cookie = ImpersonationHelper.GetImpersonationCookie(testUser, impersonateUserName, options);
-            var impersonationInfo = ImpersonationHelper.DecryptCookieValue(cookie.Value);
+            var cookie = ImpersonationServiceHelper.SetImpersonation(testUser, impersonateUserName, options);
+            var impersonationInfo = ImpersonationServiceHelper.DecryptCookieValue(cookie.Value);
             AssertIsWithinOneSecond(
                 DateTime.Now.AddMinutes(options.CookieDurationMinutes),
                 impersonationInfo.Expires); // Reviewing the test setup.
@@ -223,9 +321,9 @@ namespace Rhetos.Impersonation.Test
             // Half-time has passed:
 
             impersonationInfo.Expires = DateTime.Now.AddMinutes(options.CookieDurationMinutes / 2.0).AddSeconds(-1);
-            cookie.Value = ImpersonationHelper.EncryptCookieValue(impersonationInfo);
+            cookie.Value = ImpersonationServiceHelper.EncryptCookieValue(impersonationInfo);
 
-            (var impersonationService, var httpContext, _) = ImpersonationHelper.CreateImpersonationService(testUser, options);
+            (var impersonationService, var httpContext, _) = ImpersonationServiceHelper.CreateImpersonationService(testUser, options);
             httpContext.RequestCookies.Add(cookie);
 
             var user = impersonationService.GetAuthenticationInfo();
@@ -240,32 +338,7 @@ namespace Rhetos.Impersonation.Test
             Assert.AreEqual(ImpersonationService.CookieKey, returnedCookie.Key);
             AssertIsWithinOneSecond(
                 DateTime.Now.AddMinutes(options.CookieDurationMinutes),
-                ImpersonationHelper.DecryptCookieValue(httpContext.ResponseCookies.Single().Value).Expires);
-        }
-
-        [TestMethod]
-        public void AuthenticationContextChanged_DifferentUser()
-        {
-            var httpContextAccessor = new FakeHttpContextAccessor("Bob", "1.2.3.4", 123);
-
-            throw new NotImplementedException();
-        }
-
-        [TestMethod]
-        public void AuthenticationContextChanged_NullUser()
-        {
-            // For example, if the user logged out.
-            var httpContextAccessor = new FakeHttpContextAccessor(null, null, 0);
-
-            throw new NotImplementedException();
-        }
-
-        [TestMethod]
-        public void AuthenticationContextChanged_EmptyUser()
-        {
-            var httpContextAccessor = new FakeHttpContextAccessor("", "", 0);
-
-            throw new NotImplementedException();
+                ImpersonationServiceHelper.DecryptCookieValue(httpContext.ResponseCookies.Single().Value).Expires);
         }
 
         private static void AssertIsBefore(DateTimeOffset time1, DateTimeOffset time2)

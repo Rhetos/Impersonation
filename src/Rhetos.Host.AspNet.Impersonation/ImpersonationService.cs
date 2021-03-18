@@ -59,6 +59,12 @@ namespace Rhetos.Host.AspNet.Impersonation
 
         public void SetImpersonation(IUserInfo currentUserInfo, string impersonatedUserName)
         {
+            if (!currentUserInfo.IsUserRecognized)
+            {
+                RemoveImpersonationCookie();
+                throw new UserException("You are not authorized for impersonation. Please log in first.");
+            }
+
             var authenticatedUserName = (currentUserInfo as IImpersonationUserInfo)?.OriginalUsername ?? currentUserInfo.UserName;
             logger.LogTrace($"Impersonate: {authenticatedUserName} as {impersonatedUserName}");
 
