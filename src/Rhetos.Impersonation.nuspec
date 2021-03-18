@@ -18,10 +18,11 @@
     </dependencies>
   </metadata>
   <files>
+    <file src="..\Readme.md" target="" />
+    <file src="..\ChangeLog.md" target="" />
     <file src="DslScripts\**\*" target="DslScripts" />
     <file src="Rhetos.Impersonation\bin\Debug\net5.0\Rhetos.Impersonation.dll" target="lib\net5.0" />
     <file src="Rhetos.Impersonation\bin\Debug\net5.0\Rhetos.Impersonation.pdb" target="lib\net5.0" />
-    <file src="..\Readme.md" target="" />
-    <file src="..\ChangeLog.md" target="" />
+    <file src="Rhetos.Impersonation\bin\Debug\net5.0\Rhetos.Impersonation.xml" target="lib\net5.0" />
   </files>
 </package>

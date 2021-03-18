@@ -6,7 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="5.0.4" />
     <PackageReference Include="Rhetos.Host.AspNet" Version="5.0.0-dev*" />
     <PackageReference Include="Rhetos.RestGenerator" Version="5.0.0-dev*" />
   </ItemGroup>

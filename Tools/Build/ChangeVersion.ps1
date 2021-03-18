@@ -26,6 +26,8 @@ function RegexReplace ($fileSearch, $replacePattern, $replaceWith)
 
 Write-Output "Setting version '$fullVersion'."
 
-RegexReplace '*AssemblyInfo.cs' '([\n^]\[assembly: Assembly(File)?Version(Attribute)?\(\").*(\"\)\])' ('${1}'+$version+'${4}')
-RegexReplace '*AssemblyInfo.cs' '([\n^]\[assembly: AssemblyInformationalVersion(Attribute)?\(\").*(\"\)\])' ('${1}'+$fullVersion+'${3}')
+RegexReplace 'Directory.Build.props' '([\n^]\s*\<InformationalVersion\>).*(\<\/InformationalVersion\>\s*)' ('${1}' + $fullVersion + '${2}')
+RegexReplace 'Directory.Build.props' '([\n^]\s*\<AssemblyVersion\>).*(\<\/AssemblyVersion\>\s*)' ('${1}' + $version + '${2}')
+RegexReplace 'Directory.Build.props' '([\n^]\s*\<FileVersion\>).*(\<\/FileVersion\>\s*)' ('${1}' + $version + '${2}')
 RegexReplace '*.nuspec' '([\n^]\s*\<version\>).*(\<\/version\>\s*)' ('${1}'+$fullVersion+'${2}')
+RegexReplace 'Rhetos.Host.AspNet.Impersonation.nuspec' '(Rhetos.Impersonation\" version=\").*(\")' ('${1}'+$fullVersion+'${2}')
