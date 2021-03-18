@@ -35,17 +35,20 @@ namespace Rhetos.Host.AspNet.Impersonation
         private readonly IDataProtectionProvider dataProtectionProvider;
         private readonly ILogger<ImpersonationService> logger;
         private readonly ImpersonationOptions options;
+        private readonly BaseAuthentication baseUserInfo;
 
         public ImpersonationService(
             IHttpContextAccessor httpContextAccessor,
             IDataProtectionProvider dataProtectionProvider,
             ILogger<ImpersonationService> logger,
-            ImpersonationOptions options)
+            ImpersonationOptions options,
+            BaseAuthentication baseUserInfo)
         {
             this.httpContextAccessor = httpContextAccessor;
             this.dataProtectionProvider = dataProtectionProvider;
             this.logger = logger;
             this.options = options;
+            this.baseUserInfo = baseUserInfo;
         }
 
         public IUserInfo GetUserInfo()
@@ -118,7 +121,7 @@ namespace Rhetos.Host.AspNet.Impersonation
 
         public AuthenticationInfo GetAuthenticationInfo()
         {
-            var originalUser = new RhetosAspNetCoreIdentityUser(httpContextAccessor);
+            var originalUser = baseUserInfo.UserInfo;
 
             var encryptedValue = httpContextAccessor.HttpContext.Request.Cookies[CookieKey];
 
