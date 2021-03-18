@@ -32,7 +32,7 @@ namespace Rhetos.Host.AspNet
             builder.Services.AddHttpContextAccessor();
             builder.Services.TryAddScoped<ImpersonationService>();
             builder.Services.TryAddScoped<ApiExceptionFilter>();
-            builder.Services.AddScoped<IUserInfo>(services => services.GetRequiredService<ImpersonationService>().CreateUserInfo());
+            builder.Services.AddScoped<IUserInfo>(services => services.GetRequiredService<ImpersonationService>().GetUserInfo());
                 
             builder.Services.AddDataProtection();
             builder.Services.AddMvcCore()

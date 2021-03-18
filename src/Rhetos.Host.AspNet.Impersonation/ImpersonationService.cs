@@ -48,9 +48,9 @@ namespace Rhetos.Host.AspNet.Impersonation
             this.options = options;
         }
 
-        public IUserInfo CreateUserInfo()
+        public IUserInfo GetUserInfo()
         {
-            var user = GetImpersonation();
+            var user = GetAuthenticationInfo();
             if (string.IsNullOrEmpty(user.ImpersonationInfo?.Impersonated))
                 return user.OriginalUser;
 
@@ -74,12 +74,14 @@ namespace Rhetos.Host.AspNet.Impersonation
 
         public void RemoveImpersonation()
         {
+            bool cookieRemoved = false;
             try
             {
                 // Reading current impersonation state for logging.
-                var impersonationInfo = GetImpersonation().ImpersonationInfo;
-                if (impersonationInfo != null)
-                    logger.LogTrace($"StopImpersonating: {impersonationInfo.Authenticated} as {impersonationInfo.Impersonated}");
+                var authentication = GetAuthenticationInfo();
+                cookieRemoved = authentication.CookieRemoved;
+                if (authentication.ImpersonationInfo != null)
+                    logger.LogTrace($"StopImpersonating: {authentication.ImpersonationInfo.Authenticated} as {authentication.ImpersonationInfo.Impersonated}");
             }
             catch (Exception e)
             {
@@ -88,29 +90,54 @@ namespace Rhetos.Host.AspNet.Impersonation
             
             // RemoveImpersonation should remove the impersonation cookie, even if the current impersonation state is invalid,
             // for example if the user has already logged out with the main authentication method, or if the user has logged in with a different account.
-            RemoveImpersonationCookie();
+            if (!cookieRemoved)
+                RemoveImpersonationCookie();
         }
 
-        public (ImpersonationInfo ImpersonationInfo, IUserInfo OriginalUser) GetImpersonation()
+        public class AuthenticationInfo
+        {
+            public AuthenticationInfo(ImpersonationInfo impersonationInfo, IUserInfo originalUser, bool cookieRemoved)
+            {
+                ImpersonationInfo = impersonationInfo;
+                OriginalUser = originalUser;
+                CookieRemoved = cookieRemoved;
+            }
+
+            public ImpersonationInfo ImpersonationInfo { get; set; }
+
+            public IUserInfo OriginalUser { get; set; }
+
+            public bool CookieRemoved { get; set; }
+        }
+
+        public AuthenticationInfo GetAuthenticationInfo()
         {
             var originalUser = new RhetosAspNetCoreIdentityUser(httpContextAccessor);
 
             var encryptedValue = httpContextAccessor.HttpContext.Request.Cookies[CookieKey];
 
             if (string.IsNullOrWhiteSpace(encryptedValue))
-                return (null, originalUser);
+                return new AuthenticationInfo(null, originalUser, false);
 
             var impersonationInfo = DecryptValue(encryptedValue);
             if (impersonationInfo == null)
-                return (null, originalUser);
+                return new AuthenticationInfo(null, originalUser, false);
 
             if (DateTime.Now > impersonationInfo.Expires)
-                return (null, originalUser);
+                return new AuthenticationInfo(null, originalUser, false);
 
-            if (!originalUser.IsUserRecognized || originalUser.UserName != impersonationInfo.Authenticated)
+            if (!originalUser.IsUserRecognized)
             {
+                logger.LogTrace("Removing impersonation, the original user is no longer authenticated.");
                 RemoveImpersonationCookie();
-                return (null, originalUser);
+                return new AuthenticationInfo(null, originalUser, true);
+            }
+
+            if (originalUser.UserName != impersonationInfo.Authenticated)
+            {
+                logger.LogTrace("Removing impersonation, the current authentication context ({0}) does not match the initial one ({1}).", originalUser.UserName, impersonationInfo.Authenticated);
+                RemoveImpersonationCookie();
+                return new AuthenticationInfo(null, originalUser, true);
             }
 
             // Sliding expiration: The cookie expiration time is updated when more than half the specified time has elapsed.
@@ -121,7 +148,7 @@ namespace Rhetos.Host.AspNet.Impersonation
                 SetCookie(impersonationInfo);
             }
 
-            return (impersonationInfo, originalUser);
+            return new AuthenticationInfo(impersonationInfo, originalUser, false);
         }
 
         private void RemoveImpersonationCookie()
@@ -137,8 +164,9 @@ namespace Rhetos.Host.AspNet.Impersonation
         private void AppendCookie(ImpersonationInfo impersonationInfo, bool remove)
         {
             string encryptedValue = EncryptValue(impersonationInfo);
-            var expires = remove ? DateTimeOffset.Now.AddDays(-10) : (DateTimeOffset?)null;
-            httpContextAccessor.HttpContext.Response.Cookies.Append(CookieKey, encryptedValue, new CookieOptions() { HttpOnly = true, Expires = expires });
+            var expires = remove ? DateTimeOffset.Now.AddDays(-10) : (DateTimeOffset?)null; // Marks cookie as expired. This instructs browser to remove the cookie from the client.
+            var cookieOptions = new CookieOptions() { HttpOnly = true, Expires = expires };
+            httpContextAccessor.HttpContext.Response.Cookies.Append(CookieKey, encryptedValue, cookieOptions);
         }
 
         private string EncryptValue(ImpersonationInfo impersonationInfo)

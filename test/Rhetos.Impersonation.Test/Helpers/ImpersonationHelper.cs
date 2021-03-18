@@ -20,6 +20,7 @@
 using Microsoft.Extensions.Logging;
 using Rhetos.Host.AspNet.Impersonation;
 using Rhetos.TestCommon;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -29,7 +30,7 @@ namespace Rhetos.Impersonation.Test
     {
         public static FakeCookie GetImpersonationCookie(TestUserInfo testUser, string impersonateUserName, ImpersonationOptions options = null)
         {
-            (var impersonationService, var httpContextAccessor) = CreateImpersonationService(testUser, options);
+            (var impersonationService, var httpContextAccessor, _) = CreateImpersonationService(testUser, options);
             impersonationService.SetImpersonation(testUser, impersonateUserName);
             return httpContextAccessor.ResponseCookies.Single();
         }
@@ -50,17 +51,40 @@ namespace Rhetos.Impersonation.Test
             return (ImpersonationInfo)result;
         }
 
-        public static (ImpersonationService ImpersonationService, FakeHttpContextAccessor HttpContextAccessor) CreateImpersonationService(TestUserInfo testUser, ImpersonationOptions options = null)
+        public static (ImpersonationService ImpersonationService, FakeHttpContextAccessor HttpContextAccessor, List<string> Log)
+            CreateImpersonationService(TestUserInfo testUser, ImpersonationOptions options = null)
         {
-            options = options ?? new ImpersonationOptions();
+            options ??= new ImpersonationOptions();
             var httpContextAccessor = new FakeHttpContextAccessor(testUser?.UserName);
             var dataProtectionProvider = new FakeDataProtectionProvider();
+            var logMonitor = new LogMonitor();
             var logger = LoggerFactory
-                .Create(builder => builder.AddConsole())
+                .Create(builder =>
+                    {
+                        builder.AddConsole();
+                        builder.AddFilter(logLevel => true).AddProvider(logMonitor);
+                    })
                 .CreateLogger<ImpersonationService>();
 
             var impersonationService = new ImpersonationService(httpContextAccessor, dataProtectionProvider, logger, options);
-            return (impersonationService, httpContextAccessor);
+            return (impersonationService, httpContextAccessor, logMonitor.Log);
+        }
+
+        public static (ImpersonationService.AuthenticationInfo AuthenticationInfo, FakeCookie ResponseCookie, List<string> Log)
+            TestGetAuthenticationInfo(TestUserInfo testUser, FakeCookie requestCookie)
+        {
+            (var impersonationService, var httpContext, var log) = ImpersonationHelper.CreateImpersonationService(testUser);
+            httpContext.RequestCookies.Add(requestCookie);
+            return (impersonationService.GetAuthenticationInfo(), httpContext.ResponseCookies.SingleOrDefault(), log);
+        }
+
+        public static (FakeCookie ResponseCookie, List<string> Log)
+            TestRemoveImpersonation(TestUserInfo testUser, FakeCookie requestCookie)
+        {
+            (var impersonationService, var httpContext, var log) = ImpersonationHelper.CreateImpersonationService(testUser);
+            httpContext.RequestCookies.Add(requestCookie);
+            impersonationService.RemoveImpersonation();
+            return (httpContext.ResponseCookies.SingleOrDefault(), log);
         }
     }
 }

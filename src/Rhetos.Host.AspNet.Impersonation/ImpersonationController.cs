@@ -75,7 +75,7 @@ namespace Rhetos.Host.AspNet.Impersonation
         [HttpGet]
         public PublicImpersonationInfo GetImpersonationInfo()
         {
-            var user = impersonationService.GetImpersonation();
+            var user = impersonationService.GetAuthenticationInfo();
             return new PublicImpersonationInfo
             {
                 Authenticated = user.ImpersonationInfo?.Authenticated,
