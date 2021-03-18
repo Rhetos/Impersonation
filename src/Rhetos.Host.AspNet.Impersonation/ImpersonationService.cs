@@ -29,8 +29,8 @@ namespace Rhetos.Host.AspNet.Impersonation
 {
     public class ImpersonationService
     {
-        public static readonly string CookieKey = "Impersonation";
-        private const string CookiePurpose = "Rhetos.Impersonation";
+        public static readonly string CookieKey = "rhetos_impersonation";
+        private const string CookiePurpose = "Rhetos Impersonation";
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IDataProtectionProvider dataProtectionProvider;
         private readonly ILogger<ImpersonationService> logger;
@@ -66,7 +66,7 @@ namespace Rhetos.Host.AspNet.Impersonation
             }
 
             var authenticatedUserName = (currentUserInfo as IImpersonationUserInfo)?.OriginalUsername ?? currentUserInfo.UserName;
-            logger.LogTrace($"Impersonate: {authenticatedUserName} as {impersonatedUserName}");
+            logger.LogTrace("Impersonate: {authenticatedUserName} as {impersonatedUserName}", authenticatedUserName, impersonatedUserName);
 
             var impersonationInfo = new ImpersonationInfo()
             {
@@ -87,7 +87,7 @@ namespace Rhetos.Host.AspNet.Impersonation
                 var authentication = GetAuthenticationInfo();
                 cookieRemoved = authentication.CookieRemoved;
                 if (authentication.ImpersonationInfo != null)
-                    logger.LogTrace($"StopImpersonating: {authentication.ImpersonationInfo.Authenticated} as {authentication.ImpersonationInfo.Impersonated}");
+                    logger.LogTrace("StopImpersonating: {Authenticated} as {Impersonated}", authentication.ImpersonationInfo.Authenticated, authentication.ImpersonationInfo.Impersonated);
             }
             catch (Exception e)
             {
@@ -141,7 +141,7 @@ namespace Rhetos.Host.AspNet.Impersonation
 
             if (originalUser.UserName != impersonationInfo.Authenticated)
             {
-                logger.LogTrace("Removing impersonation, the current authentication context ({0}) does not match the initial one ({1}).", originalUser.UserName, impersonationInfo.Authenticated);
+                logger.LogTrace("Removing impersonation, the current authentication context ({UserName}) does not match the initial one ({Authenticated}).", originalUser.UserName, impersonationInfo.Authenticated);
                 RemoveImpersonationCookie();
                 return new AuthenticationInfo(null, originalUser, true);
             }
