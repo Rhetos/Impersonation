@@ -17,19 +17,24 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using Microsoft.Extensions.DependencyInjection;
+using Autofac;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Rhetos;
+using Rhetos.Host.AspNet;
 using Rhetos.Host.AspNet.Impersonation;
 using Rhetos.Host.AspNet.RestApi.Filters;
+using Rhetos.Impersonation;
 using Rhetos.Utilities;
 
-namespace Rhetos.Host.AspNet
+namespace Microsoft.Extensions.DependencyInjection
 {
     public static class RhetosAspNetServiceCollectionBuilderExtensions
     {
         public static RhetosAspNetServiceCollectionBuilder AddImpersonation(this RhetosAspNetServiceCollectionBuilder builder)
         {
             builder.Services.AddHttpContextAccessor();
+
+            builder.Services.AddSingleton<ImpersonationOptions>(provider => provider.GetRequiredService<RhetosHost>().GetRootContainer().Resolve<ImpersonationOptions>());
             builder.Services.TryAddScoped<ImpersonationService>();
             builder.Services.TryAddScoped<ApiExceptionFilter>();
             builder.Services.AddScoped<RhetosAspNetCoreIdentityUser>();
