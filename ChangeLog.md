@@ -8,6 +8,7 @@ Breaking changes:
 2. IImpersonationUserInfo provides properties OriginalUsername and IsImpersonated instead of ImpersonatedBy and AuthenticatedUserName.
    * Code that tested if `ImpersonatedBy != null` should check IsImpersonated instead.
    * Code that used AuthenticatedUserName or ImpersonatedBy, should use OriginalUsername instead. Both old properties provided the same value, but ImpersonatedBy was *null* if the impersonation was not active.
+3. If there is no HttpContex active, for example in unit tests, the impersonation will no longer use fake (in-memory) session storge.
 
 Internal improvements:
 

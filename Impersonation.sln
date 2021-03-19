@@ -7,7 +7,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rhetos.Impersonation", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rhetos.Host.AspNet.Impersonation", "src\Rhetos.Host.AspNet.Impersonation\Rhetos.Host.AspNet.Impersonation.csproj", "{1F03B9FA-5697-4216-AE56-85119232D5F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rhetos.Impersonation.Test", "test\Rhetos.Impersonation.Test\Rhetos.Impersonation.Test.csproj", "{0A466C39-2CD7-48B8-A0A8-5686D495942B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rhetos.Impersonation.Test", "test\Rhetos.Impersonation.Test\Rhetos.Impersonation.Test.csproj", "{0A466C39-2CD7-48B8-A0A8-5686D495942B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3D64C979-6FD6-462C-9AC1-4679A387F62E}"
+	ProjectSection(SolutionItems) = preProject
+		Build.bat = Build.bat
+		ChangeLog.md = ChangeLog.md
+		Clean.bat = Clean.bat
+		Directory.Build.props = Directory.Build.props
+		Readme.md = Readme.md
+		Test.bat = Test.bat
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

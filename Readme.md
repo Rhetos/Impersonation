@@ -30,15 +30,21 @@ Impersonation plugin adds the following security claims:
 It is not intended for in-process impersonation.
 
 To **start impersonating** another user, call *Common.Impersonate* action providing *UserName* parameter.
-The action returns *Impersonation cookie* in the web response.
-Provide this cookie in the following web requests to impersonate that user (web browser will automatically provide the cookie).
 
-In order to **stop impersonation** call *Common.StopImpersonating* action.
+* Send a POST request to `<base URL>/rest/Common/Impersonate` with body `{"UserName":"<impersonated user>"}`
+* The action returns *Impersonation cookie* in the web response.
+* Provide this cookie in the following web requests to impersonate that user (web browser will automatically provide the cookie).
+
+In order to **stop impersonation**, call *Common.StopImpersonating* action.
+
+* Send a POST request to `<base URL>/rest/Common/StopImpersonating`.
 
 ## Impersonated user information in other applications
 
 *Version 5 and later:*
 To retrieve the original and the impersonated user information, call web method GetImpersonationInfo.
+
+* Send a GET request to `<base URL>/rest/Common/GetImpersonationInfo`. It returns a JSON object with properties Authenticated (the original user) and Impersonated (the impersonated user).
 
 *Version 4 and earlier:*
 To retrieve username of impersonated user in your MVC application, your MVC application will have to have same machine key as Rhetos application. The code which extracts impersonated username from *Impersonation* cookie is listed bellow.
@@ -48,7 +54,6 @@ private class ImpersonationInfo
 {
     public string Authenticated { get; set; }
     public string Impersonated { get; set; }
-    public DateTime Expires { get; set; }
 }
 
 public string GetImpersonatedUserName()
@@ -69,11 +74,11 @@ public string GetImpersonatedUserName()
         return null;
 
     var json = Encoding.UTF8.GetString(output);
-    var impersontedInfo = Newtonsoft.JsonConvert.DeserializeObject<ImpersonationInfo>(json);
+    var impersonatedInfo = Newtonsoft.JsonConvert.DeserializeObject<ImpersonationInfo>(json);
 
-    if (impersontedInfo.Expires < DateTime.Now)
+    if (impersonatedInfo.Expires < DateTime.Now)
         return null;
 
-    return impersontedInfo.Impersonated;
+    return impersonatedInfo.Impersonated;
 }
 ```
