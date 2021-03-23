@@ -370,3 +370,7 @@ FodyWeavers.xsd
 
 # Local History for Visual Studio Code
 .history/
+
+# Rhetos user-specific files
+*.local.settings.json
+*.local.json

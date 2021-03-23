@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
+    <PackageReference Include="Rhetos.Host" Version="5.0.0-dev*" />
+    <PackageReference Include="Rhetos.Host.AspNet" Version="5.0.0-dev*" />
+    <PackageReference Include="Rhetos.CommonConcepts" Version="5.0.0-dev*" />
+    <PackageReference Include="Rhetos.MSBuild" Version="5.0.0-dev*" />
+    <PackageReference Include="Rhetos.RestGenerator" Version="5.0.0-dev*" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Rhetos.Host.AspNet.Impersonation\Rhetos.Host.AspNet.Impersonation.csproj" />
+    <ProjectReference Include="..\..\src\Rhetos.Impersonation\Rhetos.Impersonation.csproj" />
+  </ItemGroup>
+
+</Project>
