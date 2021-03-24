@@ -19,7 +19,7 @@ namespace Bookstore.Service.Controllers
 
         public AuthenticationController(IRhetosComponent<IProcessingEngine> rhetosProcessingEngine, IRhetosComponent<IUserInfo> userInfo)
         {
-            this.userInfo = userInfo; // TODO: Try getting .Value here!
+            this.userInfo = userInfo;
         }
 
         [HttpGet]

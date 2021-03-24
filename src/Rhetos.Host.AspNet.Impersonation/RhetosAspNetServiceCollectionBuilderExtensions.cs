@@ -34,7 +34,6 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             builder.Services.AddHttpContextAccessor();
 
-            builder.Services.AddSingleton<ImpersonationOptions>(provider => provider.GetRequiredService<RhetosHost>().GetRootContainer().Resolve<ImpersonationOptions>());
             builder.Services.TryAddScoped<ImpersonationService>();
             builder.Services.TryAddScoped<ApiExceptionFilter>();
             builder.Services.AddScoped<RhetosAspNetCoreIdentityUser>();

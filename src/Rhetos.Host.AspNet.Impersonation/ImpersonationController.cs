@@ -40,7 +40,10 @@ namespace Rhetos.Host.AspNet.Impersonation
         private readonly ImpersonationService impersonationService;
         private readonly IRhetosComponent<ImpersonationContext> rhetosImpersonationContext;
 
-        public ImpersonationController(IUserInfo userInfo, ImpersonationService impersonationService, IRhetosComponent<ImpersonationContext> rhetosImpersonationContext)
+        public ImpersonationController(
+            IUserInfo userInfo,
+            ImpersonationService impersonationService,
+            IRhetosComponent<ImpersonationContext> rhetosImpersonationContext)
         {
             this.userInfo = userInfo;
             this.impersonationService = impersonationService;

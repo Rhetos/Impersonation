@@ -28,7 +28,7 @@ namespace Rhetos.Impersonation
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<ImpersonationContext>();
+            builder.RegisterType<ImpersonationContext>().InstancePerLifetimeScope();
             builder.Register(context => context.Resolve<IConfiguration>().GetOptions<ImpersonationOptions>()).SingleInstance();
             base.Load(builder);
         }
