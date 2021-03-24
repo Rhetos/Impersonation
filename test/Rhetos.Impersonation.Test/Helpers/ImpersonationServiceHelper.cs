@@ -71,9 +71,7 @@ namespace Rhetos.Impersonation.Test
                 .CreateLogger<ImpersonationService>();
             BaseAuthentication baseUserInfo = new BaseAuthentication(new RhetosAspNetCoreIdentityUser(httpContextAccessor));
 
-            var impersonationService = new ImpersonationService(httpContextAccessor, dataProtectionProvider, logger,
-                FakeRhetosComponent.Create(new ImpersonationOptions()),
-                baseUserInfo);
+            var impersonationService = new ImpersonationService(httpContextAccessor, dataProtectionProvider, logger, options, baseUserInfo);
             return (impersonationService, httpContextAccessor, logMonitor.Log);
         }
 

@@ -17,24 +17,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using Rhetos.Host.AspNet;
-
-namespace Rhetos.Impersonation.Test
+namespace Rhetos.Host.AspNet.Impersonation
 {
-    public class FakeRhetosComponent<T> : IRhetosComponent<T>
+    public class ImpersonationOptions
     {
-        private readonly T component;
+        public const string ConfigurationKey = "Impersonation";
 
-        public FakeRhetosComponent(T component)
-        {
-            this.component = component;
-        }
-
-        public T Value => component;
-    }
-
-    public static class FakeRhetosComponent
-    {
-        public static FakeRhetosComponent<TNew> Create<TNew>(TNew component) => new FakeRhetosComponent<TNew>(component);
+        public int CookieDurationMinutes { get; set; } = 60;
     }
 }
