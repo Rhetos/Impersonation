@@ -45,7 +45,7 @@ namespace Rhetos.Host.AspNet.Impersonation
         public string Report()
         {
             if (IsImpersonated)
-                return $"{_originalUser.UserName} as {UserName}, {Workstation}";
+                return $"{_originalUser.UserName} as {UserName},{Workstation}";
             else
                 return _originalUser.Report();
         }
