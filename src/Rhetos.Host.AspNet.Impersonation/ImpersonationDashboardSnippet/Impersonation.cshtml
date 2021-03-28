@@ -9,7 +9,11 @@
 	var pathBase = httpContextAccessor.HttpContext?.Request.PathBase.Value ?? "";
 }
 
-@if (impersonationInfo == null || !impersonationInfo.IsImpersonated)
+@if (!Model.IsUserRecognized || string.IsNullOrEmpty(Model?.UserName))
+{
+	@: Not logged in.
+}
+else if (impersonationInfo == null || !impersonationInfo.IsImpersonated)
 {
 	@: No impersonation active for '@Model.UserName'
 	@: &nbsp; <input id="impersonation-username" placeholder="username" />
