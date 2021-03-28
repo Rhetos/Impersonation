@@ -29,5 +29,7 @@
     <file src="Rhetos.Host.AspNet.Impersonation\bin\Debug\net5.0\Rhetos.Host.AspNet.Impersonation.dll" target="lib\net5.0" />
     <file src="Rhetos.Host.AspNet.Impersonation\bin\Debug\net5.0\Rhetos.Host.AspNet.Impersonation.pdb" target="lib\net5.0" />
     <file src="Rhetos.Host.AspNet.Impersonation\bin\Debug\net5.0\Rhetos.Host.AspNet.Impersonation.xml" target="lib\net5.0" />
+    <file src="Rhetos.Host.AspNet.Impersonation\bin\Debug\net5.0\Rhetos.Host.AspNet.Impersonation.Views.dll" target="lib\net5.0" />
+    <file src="Rhetos.Host.AspNet.Impersonation\bin\Debug\net5.0\Rhetos.Host.AspNet.Impersonation.Views.pdb" target="lib\net5.0" />
   </files>
 </package>
