@@ -21,7 +21,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Rhetos.Host.AspNet;
 using Rhetos.Host.AspNet.Impersonation;
-using Rhetos.Host.AspNet.Impersonation.DashboardSnippet;
+using Rhetos.Host.AspNet.Impersonation.ImpersonationDashboardSnippet;
 using Rhetos.Host.AspNet.RestApi.Filters;
 using Rhetos.Utilities;
 
@@ -52,7 +52,7 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Services.AddMvcCore()
                 .AddApplicationPart(typeof(ImpersonationController).Assembly);
 
-            builder.AddDashboardSnippet(typeof(ImpersonationSnippet), "Impersonation");
+            builder.AddDashboardSnippet<ImpersonationSnippet>();
 
             return builder;
         }
