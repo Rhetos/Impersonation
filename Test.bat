@@ -1,5 +1,8 @@
 SETLOCAL
 
+@REM Assuming Build.bat has completed successfully.
+test\TestApp\bin\Debug\net5.0\rhetos.exe dbupdate test\TestApp\bin\Debug\net5.0\TestApp.dll
+
 @REM Using "no-build" option as optimization, because Test.bat should always be executed after Build.bat.
 dotnet test Impersonation.sln --no-build || GOTO Error0
 
