@@ -44,7 +44,7 @@ namespace TestApp
                 .AddRestApi(o =>
                 {
                     o.BaseRoute = "rest";
-                    o.GroupNameMapper = (conceptInfo, name) => "rhetos"; // OpenAPI document name.
+                    o.GroupNameMapper = (conceptInfo, controller, oldName) => "rhetos"; // OpenAPI document name.
                 });
 
             // Configuring Authentication.
