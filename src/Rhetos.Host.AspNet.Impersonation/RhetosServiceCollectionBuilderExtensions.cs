@@ -19,6 +19,7 @@
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Rhetos;
 using Rhetos.Host.AspNet;
 using Rhetos.Host.AspNet.Impersonation;
 using Rhetos.Host.AspNet.RestApi.Filters;
@@ -26,9 +27,9 @@ using Rhetos.Utilities;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
-    public static class RhetosAspNetServiceCollectionBuilderExtensions
+    public static class RhetosServiceCollectionBuilderExtensions
     {
-        public static RhetosAspNetServiceCollectionBuilder AddImpersonation(this RhetosAspNetServiceCollectionBuilder builder)
+        public static RhetosServiceCollectionBuilder AddImpersonation(this RhetosServiceCollectionBuilder builder)
         {
             builder.Services.AddHttpContextAccessor();
 

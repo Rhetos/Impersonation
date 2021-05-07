@@ -2,16 +2,12 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Rhetos;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace TestApp
@@ -38,8 +34,8 @@ namespace TestApp
             });
 
             // Adding Rhetos to AspNetCore application.
-            services.AddRhetos(rhetosHostBuilder => ConfigureRhetosHostBuilder(rhetosHostBuilder, Configuration))
-                .UseAspNetCoreIdentityUser()
+            services.AddRhetosHost(ConfigureRhetosHostBuilder)
+                .AddAspNetCoreIdentityUser()
                 .AddImpersonation()
                 .AddRestApi(o =>
                 {
@@ -89,14 +85,14 @@ namespace TestApp
         // and any other code that wishes to recreate RhetosHost specific for this web application
         // Common use is to call this from Program.CreateRhetosHostBuilder method which is by convention consumed by
         // Rhetos tools.
-        public static void ConfigureRhetosHostBuilder(IRhetosHostBuilder rhetosHostBuilder, IConfiguration configuration)
+        private void ConfigureRhetosHostBuilder(IServiceProvider serviceProvider, IRhetosHostBuilder rhetosHostBuilder)
         {
             rhetosHostBuilder
-                .ConfigureRhetosHostDefaults()
+                .ConfigureRhetosAppDefaults()
                 .UseBuilderLogProvider(new Rhetos.Host.Net.Logging.RhetosBuilderDefaultLogProvider()) // Delegate RhetosHost logging to standard NetCore targets.
                 .ConfigureConfiguration(cfg => cfg
                     .AddJsonFile("ConnectionString.local.json")
-                    .MapNetCoreConfiguration(configuration));
+                    .MapNetCoreConfiguration(Configuration));
         }
     }
 }
