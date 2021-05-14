@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Rhetos;
+using Rhetos.Host.AspNet.Impersonation;
 using System;
 using System.Threading.Tasks;
 
@@ -37,7 +38,7 @@ namespace TestApp
             // Adding Rhetos to AspNetCore application.
             services.AddRhetosHost(ConfigureRhetosHostBuilder)
                 .AddAspNetCoreIdentityUser()
-                .AddImpersonation()
+                .AddImpersonation(options => Configuration.GetSection(ImpersonationOptions.SectionName).Bind(options))
                 .AddRestApi(o =>
                 {
                     o.BaseRoute = "rest";

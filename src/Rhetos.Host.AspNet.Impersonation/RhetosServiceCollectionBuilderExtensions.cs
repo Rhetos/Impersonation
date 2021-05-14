@@ -17,33 +17,28 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Rhetos;
 using Rhetos.Host.AspNet;
 using Rhetos.Host.AspNet.Impersonation;
-using Rhetos.Host.AspNet.RestApi.Filters;
 using Rhetos.Utilities;
+using System;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class RhetosServiceCollectionBuilderExtensions
     {
-        public static RhetosServiceCollectionBuilder AddImpersonation(this RhetosServiceCollectionBuilder builder)
+        public static RhetosServiceCollectionBuilder AddImpersonation(this RhetosServiceCollectionBuilder builder, Action<ImpersonationOptions> configureOptions = null)
         {
             builder.Services.AddHttpContextAccessor();
 
-            builder.Services.AddSingleton<ImpersonationOptions>(provider =>
+            builder.Services.AddOptions();
+            if (configureOptions != null)
             {
-                var options = new ImpersonationOptions();
-                provider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>()
-                    .GetSection(ImpersonationOptions.ConfigurationKey)
-                    .Bind(options);
-                return options;
-            });
+                builder.Services.Configure(configureOptions);
+            }
 
+            builder.AddRestApiFilters();
             builder.Services.TryAddScoped<ImpersonationService>();
-            builder.Services.TryAddScoped<ApiExceptionFilter>();
             builder.Services.AddScoped<RhetosAspNetCoreIdentityUser>();
             builder.Services.AddScoped<BaseAuthentication>(services => new BaseAuthentication(services.GetRequiredService<RhetosAspNetCoreIdentityUser>()));
             builder.Services.AddScoped<IUserInfo>(services => services.GetRequiredService<ImpersonationService>().GetUserInfo());

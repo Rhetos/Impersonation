@@ -19,8 +19,8 @@
 
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Rhetos.Impersonation;
 using Rhetos.Utilities;
@@ -35,14 +35,14 @@ namespace Rhetos.Host.AspNet.Impersonation
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IDataProtectionProvider dataProtectionProvider;
         private readonly ILogger<ImpersonationService> logger;
-        private readonly ImpersonationOptions options;
+        private readonly IOptions<ImpersonationOptions> options;
         private readonly BaseAuthentication baseUserInfo;
 
         public ImpersonationService(
             IHttpContextAccessor httpContextAccessor,
             IDataProtectionProvider dataProtectionProvider,
             ILogger<ImpersonationService> logger,
-            ImpersonationOptions options,
+            IOptions<ImpersonationOptions> options,
             BaseAuthentication baseUserInfo)
         {
             this.httpContextAccessor = httpContextAccessor;
@@ -76,7 +76,7 @@ namespace Rhetos.Host.AspNet.Impersonation
             {
                 Authenticated = authenticatedUserName,
                 Impersonated = impersonatedUserName,
-                Expires = DateTime.Now.AddMinutes(options.CookieDurationMinutes)
+                Expires = DateTime.Now.AddMinutes(options.Value.CookieDurationMinutes)
             };
 
             SetCookie(impersonationInfo);
@@ -151,10 +151,10 @@ namespace Rhetos.Host.AspNet.Impersonation
             }
 
             // Sliding expiration: The cookie expiration time is updated when more than half the specified time has elapsed.
-            DateTime cookieCreated = impersonationInfo.Expires.AddMinutes(-options.CookieDurationMinutes);
-            if ((DateTime.Now - cookieCreated).TotalMinutes > options.CookieDurationMinutes / 2.0)
+            DateTime cookieCreated = impersonationInfo.Expires.AddMinutes(-options.Value.CookieDurationMinutes);
+            if ((DateTime.Now - cookieCreated).TotalMinutes > options.Value.CookieDurationMinutes / 2.0)
             {
-                impersonationInfo.Expires = DateTime.Now.AddMinutes(options.CookieDurationMinutes);
+                impersonationInfo.Expires = DateTime.Now.AddMinutes(options.Value.CookieDurationMinutes);
                 SetCookie(impersonationInfo);
             }
 
