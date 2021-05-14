@@ -21,7 +21,7 @@ namespace Rhetos.Host.AspNet.Impersonation
 {
     public class ImpersonationOptions
     {
-        public const string ConfigurationKey = "Impersonation";
+        public const string SectionName = "Impersonation";
 
         public int CookieDurationMinutes { get; set; } = 60;
     }

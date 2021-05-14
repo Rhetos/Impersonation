@@ -18,6 +18,7 @@
 */
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Rhetos.Host.AspNet;
 using Rhetos.Host.AspNet.Impersonation;
 using Rhetos.Utilities;
@@ -71,7 +72,7 @@ namespace Rhetos.Impersonation.Test
                 .CreateLogger<ImpersonationService>();
             BaseAuthentication baseUserInfo = new BaseAuthentication(new RhetosAspNetCoreIdentityUser(httpContextAccessor));
 
-            var impersonationService = new ImpersonationService(httpContextAccessor, dataProtectionProvider, logger, options, baseUserInfo);
+            var impersonationService = new ImpersonationService(httpContextAccessor, dataProtectionProvider, logger, new OptionsWrapper<ImpersonationOptions>(options), baseUserInfo);
             return (impersonationService, httpContextAccessor, logMonitor.Log);
         }
 
