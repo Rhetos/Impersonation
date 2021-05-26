@@ -17,6 +17,7 @@ Installing this package to a Rhetos web application:
 
 1. Add 'Rhetos.Impersonation' NuGet package, available at the [NuGet.org](https://www.nuget.org/) on-line gallery:
 2. Extend Rhetos services configuration (at `services.AddRhetos`) with the impersonation service: `.AddImpersonation()`
+3. Extend the endpoints with new routes: `endpoints.MapRhetosImperosnation`
 
 Impersonation plugin adds the following security claims:
 

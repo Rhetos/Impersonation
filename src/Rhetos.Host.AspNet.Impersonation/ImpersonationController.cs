@@ -17,15 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Rhetos.Host.AspNet.RestApi.Filters;
 using Rhetos.Impersonation;
 using Rhetos.Utilities;
@@ -33,7 +25,6 @@ using Rhetos.Utilities;
 namespace Rhetos.Host.AspNet.Impersonation
 {
     [ServiceFilter(typeof(ApiExceptionFilter))]
-    [Route("rest/Common/[action]")]
     public class ImpersonationController : ControllerBase
     {
         private readonly IUserInfo userInfo;

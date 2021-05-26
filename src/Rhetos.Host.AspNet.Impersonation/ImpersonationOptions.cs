@@ -24,5 +24,9 @@ namespace Rhetos.Host.AspNet.Impersonation
         public const string SectionName = "Impersonation";
 
         public int CookieDurationMinutes { get; set; } = 60;
+
+        public string BaseRoute { get; set; } = "rest/Common";
+
+        public string ApiExplorerGroupName { get; set; } = "rhetos";
     }
 }
