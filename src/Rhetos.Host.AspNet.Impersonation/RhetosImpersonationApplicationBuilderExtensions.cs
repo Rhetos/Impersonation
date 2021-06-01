@@ -24,7 +24,7 @@ using Rhetos.Host.AspNet.Impersonation;
 
 namespace Microsoft.AspNetCore.Builder
 {
-    public static class RhetosImperosnationApplicationBuilderExtensions
+    public static class RhetosImpersonationApplicationBuilderExtensions
     {
         /// <summary>
         /// Add Impersonation controller to MVC feature pipeline and maps it to its respective routes.
@@ -39,7 +39,7 @@ namespace Microsoft.AspNetCore.Builder
             // Also, due to inner workings of MVC, this method will not work if controllers are in 'AsServices' mode (via services.AddControllersAsServices())
             var impersonationOptions = app.ApplicationServices.GetRequiredService<IOptions<ImpersonationOptions>>();
             var mvcOptions = app.ApplicationServices.GetRequiredService<IOptions<MvcOptions>>();
-            mvcOptions.Value.Conventions.Add(new ImperosnationControllerRouteConvention(impersonationOptions));
+            mvcOptions.Value.Conventions.Add(new ImpersonationControllerRouteConvention(impersonationOptions));
 
             return app;
         }

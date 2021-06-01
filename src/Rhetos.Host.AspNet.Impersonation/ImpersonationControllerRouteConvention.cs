@@ -23,11 +23,11 @@ using Microsoft.Extensions.Options;
 
 namespace Rhetos.Host.AspNet.Impersonation
 {
-    internal class ImperosnationControllerRouteConvention : IControllerModelConvention
+    internal class ImpersonationControllerRouteConvention : IControllerModelConvention
     {
         private readonly IOptions<ImpersonationOptions> impersonationOptions;
 
-        public ImperosnationControllerRouteConvention(IOptions<ImpersonationOptions> impersonationOptions)
+        public ImpersonationControllerRouteConvention(IOptions<ImpersonationOptions> impersonationOptions)
         {
             this.impersonationOptions = impersonationOptions;
         }

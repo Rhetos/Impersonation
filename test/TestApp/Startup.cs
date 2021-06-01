@@ -40,7 +40,7 @@ namespace TestApp
                 .AddAspNetCoreIdentityUser()
                 .AddImpersonation(options =>
                 {
-                    Configuration.Bind(ImpersonationOptions.SectionName, options);
+                    Configuration.Bind(ImpersonationOptions.DefaultSectionName, options);
                     options.BaseRoute = "rest/Common";
                     options.ApiExplorerGroupName = "rhetos";
                 })
