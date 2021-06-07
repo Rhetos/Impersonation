@@ -38,7 +38,12 @@ namespace TestApp
             // Adding Rhetos to AspNetCore application.
             services.AddRhetosHost(ConfigureRhetosHostBuilder)
                 .AddAspNetCoreIdentityUser()
-                .AddImpersonation(options => Configuration.GetSection(ImpersonationOptions.SectionName).Bind(options))
+                .AddImpersonation(options =>
+                {
+                    Configuration.Bind(ImpersonationOptions.DefaultSectionName, options);
+                    options.BaseRoute = "rest/Common";
+                    options.ApiExplorerGroupName = "rhetos";
+                })
                 .AddRestApi(o =>
                 {
                     o.BaseRoute = "rest";
@@ -76,6 +81,8 @@ namespace TestApp
             app.UseAuthentication();
 
             app.UseAuthorization();
+
+            app.UseRhetosImpersonation();
 
             app.UseEndpoints(endpoints =>
             {

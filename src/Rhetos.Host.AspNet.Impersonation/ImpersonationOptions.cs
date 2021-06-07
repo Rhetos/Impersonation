@@ -21,8 +21,15 @@ namespace Rhetos.Host.AspNet.Impersonation
 {
     public class ImpersonationOptions
     {
-        public const string SectionName = "Impersonation";
+        public const string DefaultSectionName = "Impersonation";
 
         public int CookieDurationMinutes { get; set; } = 60;
+
+        /// <summary>
+        /// The default value is backward compatible with older versions of Impersonation plugin.
+        /// </summary>
+        public string BaseRoute { get; set; } = "rest/Common";
+
+        public string ApiExplorerGroupName { get; set; } = "rhetos";
     }
 }
