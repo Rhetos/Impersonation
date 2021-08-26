@@ -20,6 +20,7 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Rhetos.Host.AspNet;
 using Rhetos.Host.AspNet.Impersonation;
+using Rhetos.Host.AspNet.Impersonation.ImpersonationDashboardSnippet;
 using Rhetos.Utilities;
 using System;
 
@@ -46,6 +47,9 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Services.AddDataProtection();
             builder.Services.AddMvcCore()
                 .AddApplicationPart(typeof(ImpersonationController).Assembly);
+
+            builder.AddDashboardSnippet<ImpersonationSnippet>();
+
             return builder;
         }
     }
