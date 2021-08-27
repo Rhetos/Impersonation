@@ -48,7 +48,7 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Services.AddMvcCore()
                 .AddApplicationPart(typeof(ImpersonationController).Assembly);
 
-            builder.AddDashboardSnippet<ImpersonationSnippet>();
+            builder.AddDashboardSnippet<ImpersonationDashboardSnippet>();
 
             return builder;
         }
