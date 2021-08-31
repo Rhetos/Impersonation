@@ -19,6 +19,18 @@ Installing this package to a Rhetos web application:
 2. Extend the Rhetos services configuration (at `services.AddRhetosHost`) with the impersonation service: `.AddImpersonation()`
 3. Extend the application with new endpoints : `.UseRhetosImpersonation()` in the `Startup.Configure` method. It is important to call `.UseRhetosImpersonation()` before `.UseEndpoints()`.
 
+Configure impersonation options in `AddImpersonation` delegate parameter.
+See [ImpersonationOptions](https://github.com/Rhetos/Impersonation/blob/master/src/Rhetos.Host.AspNet.Impersonation/ImpersonationOptions.cs) class.
+Example:
+
+```cs
+.AddImpersonation(options =>
+    {
+        Configuration.Bind(ImpersonationOptions.DefaultSectionName, options); // Reads standard app settings.
+        options.ApiExplorerGroupName = "impersonation"; // Manual configuration override in code.
+    })
+```
+
 Impersonation plugin adds the following security claims:
 
 * *ClaimResource*: 'Common.Impersonate',  *ClaimRight*: 'Execute' - claim which allows authenticated user to impersonate another user.
