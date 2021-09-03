@@ -17,6 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Rhetos.Host.AspNet;
 using Rhetos.Host.AspNet.Impersonation;
@@ -24,7 +25,7 @@ using Rhetos.Host.AspNet.Impersonation.ImpersonationDashboardSnippet;
 using Rhetos.Utilities;
 using System;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace Rhetos
 {
     public static class RhetosServiceCollectionBuilderExtensions
     {
