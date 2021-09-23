@@ -8,7 +8,7 @@ SET Prerelease=auto
 REM Updating the build version.
 PowerShell -ExecutionPolicy ByPass .\Tools\Build\ChangeVersion.ps1 %Version% %Prerelease% || GOTO Error0
 
-dotnet build Impersonation.sln --configuration %Config% || GOTO Error0
+dotnet build Impersonation.sln --configuration %Config% -p:RhetosDeploy=false || GOTO Error0
 
 IF NOT EXIST Install MD Install
 DEL /F /S /Q Install\* || GOTO Error0
