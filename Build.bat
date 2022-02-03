@@ -6,9 +6,9 @@ SET Prerelease=auto
 @IF [%1] == [] SET Config=Debug
 
 REM Updating the build version.
-PowerShell -ExecutionPolicy ByPass .\Tools\Build\ChangeVersion.ps1 %Version% %Prerelease% || GOTO Error0
+PowerShell -ExecutionPolicy ByPass .\tools\Build\ChangeVersion.ps1 %Version% %Prerelease% || GOTO Error0
 
-dotnet build Impersonation.sln --configuration %Config% -p:RhetosDeploy=false || GOTO Error0
+dotnet build --configuration %Config% -p:RhetosDeploy=false || GOTO Error0
 
 IF NOT EXIST Install MD Install
 DEL /F /S /Q Install\* || GOTO Error0
@@ -18,7 +18,7 @@ NuGet pack .\src\Rhetos.Impersonation.nuspec -OutputDirectory Install || GOTO Er
 NuGet pack .\src\Rhetos.Host.AspNet.Impersonation.nuspec -OutputDirectory Install || GOTO Error0
 
 REM Updating the build version back to "dev" (internal development build), to avoid spamming git history with timestamped prerelease versions.
-PowerShell -ExecutionPolicy ByPass .\Tools\Build\ChangeVersion.ps1 %Version% dev || GOTO Error0
+PowerShell -ExecutionPolicy ByPass .\tools\Build\ChangeVersion.ps1 %Version% dev || GOTO Error0
 
 @REM ================================================
 
@@ -27,7 +27,7 @@ PowerShell -ExecutionPolicy ByPass .\Tools\Build\ChangeVersion.ps1 %Version% dev
 @EXIT /B 0
 
 :Error0
-@PowerShell -ExecutionPolicy ByPass .\Tools\Build\ChangeVersion.ps1 %Version% dev >nul
+@PowerShell -ExecutionPolicy ByPass .\tools\Build\ChangeVersion.ps1 %Version% dev >nul
 @ECHO.
 @ECHO %~nx0 FAILED.
 @IF /I [%1] NEQ [/NOPAUSE] @PAUSE
