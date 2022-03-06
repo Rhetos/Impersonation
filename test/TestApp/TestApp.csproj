@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <RhetosDeploy>False</RhetosDeploy>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,5 +18,16 @@
     <ProjectReference Include="..\..\src\Rhetos.Host.AspNet.Impersonation\Rhetos.Host.AspNet.Impersonation.csproj" />
     <ProjectReference Include="..\..\src\Rhetos.Impersonation\Rhetos.Impersonation.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="DslScripts\Rhetos.Impersonation\" />
+  </ItemGroup>
+
+  <Target Name="CopyDslScripts" BeforeTargets="ResolveRhetosBuildItems">
+    <ItemGroup>
+	  <ImpersonationDslScripts Include="..\..\src\DslScripts\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ImpersonationDslScripts)" DestinationFolder="DslScripts\Rhetos.Impersonation" SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

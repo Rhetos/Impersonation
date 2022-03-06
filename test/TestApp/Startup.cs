@@ -106,6 +106,7 @@ namespace TestApp
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapRhetosDashboard();
             });
         }
 
