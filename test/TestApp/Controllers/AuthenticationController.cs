@@ -35,7 +35,7 @@ namespace Bookstore.Service.Controllers
     {
         private readonly IRhetosComponent<IUserInfo> userInfo;
 
-        public AuthenticationController(IRhetosComponent<IProcessingEngine> rhetosProcessingEngine, IRhetosComponent<IUserInfo> userInfo)
+        public AuthenticationController(IRhetosComponent<IUserInfo> userInfo)
         {
             this.userInfo = userInfo;
         }
@@ -51,7 +51,7 @@ namespace Bookstore.Service.Controllers
         }
 
         [HttpGet]
-        public async Task Logout(string username)
+        public async Task Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme,
                 new AuthenticationProperties() { IsPersistent = true });

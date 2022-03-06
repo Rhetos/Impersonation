@@ -15,8 +15,8 @@ See [rhetos.org](http://www.rhetos.org/) for more information on Rhetos.
 
 Installing this package to a Rhetos web application:
 
-1. Add 'Rhetos.Impersonation' NuGet package, available at the [NuGet.org](https://www.nuget.org/) on-line gallery.
-2. Extend the Rhetos services configuration (at `services.AddRhetosHost`) with the impersonation service: `.AddImpersonation()`
+1. Add 'Rhetos.Host.AspNet.Impersonation' NuGet package, available at the [NuGet.org](https://www.nuget.org/) on-line gallery.
+2. Extend the Rhetos services configuration (at `services.AddRhetosHost`) with the impersonation service: `.AddImpersonation()`.
 3. Extend the application with new endpoints : `.UseRhetosImpersonation()` in the `Startup.Configure` method. It is important to call `.UseRhetosImpersonation()` before `.UseEndpoints()`.
 
 Configure impersonation options in `AddImpersonation` delegate parameter.

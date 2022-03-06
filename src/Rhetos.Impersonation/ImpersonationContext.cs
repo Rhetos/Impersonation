@@ -105,7 +105,7 @@ namespace Rhetos.Impersonation
                         increasePermissionsClaim.FullName);
 
                     throw new UserException("You are not allowed to impersonate user '{0}'.",
-                        new[] { impersonatedUserName }, $"See server log for more information. ({DateTime.Now.ToString("s")})", null);
+                        new[] { impersonatedUserName }, $"See server log for more information. ({DateTime.Now:s})", null);
                 }
             }
         }

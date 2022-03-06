@@ -67,7 +67,8 @@ namespace TestApp
                 {
                     o.BaseRoute = "rest";
                     o.GroupNameMapper = (conceptInfo, controller, oldName) => "rhetos"; // OpenAPI document name.
-                });
+                })
+                .AddHostLogging();
 
             // Configuring Authentication.
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
