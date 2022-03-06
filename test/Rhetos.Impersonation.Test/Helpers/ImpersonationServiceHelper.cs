@@ -21,7 +21,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Rhetos.Host.AspNet;
 using Rhetos.Host.AspNet.Impersonation;
+using Rhetos.Logging;
 using Rhetos.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -62,18 +64,14 @@ namespace Rhetos.Impersonation.Test
             options ??= new ImpersonationOptions();
             var httpContextAccessor = new FakeHttpContextAccessor(testUser?.IsUserRecognized == true ? testUser.UserName : null);
             var dataProtectionProvider = new FakeDataProtectionProvider();
-            var logMonitor = new LogMonitor();
-            var logger = LoggerFactory
-                .Create(builder =>
-                    {
-                        builder.AddConsole();
-                        builder.AddFilter(logLevel => true).AddProvider(logMonitor);
-                    })
-                .CreateLogger<ImpersonationService>();
             BaseAuthentication baseUserInfo = new BaseAuthentication(new RhetosAspNetCoreIdentityUser(httpContextAccessor));
 
-            var impersonationService = new ImpersonationService(httpContextAccessor, dataProtectionProvider, logger, new OptionsWrapper<ImpersonationOptions>(options), baseUserInfo);
-            return (impersonationService, httpContextAccessor, logMonitor.Log);
+            var log = new List<string>();
+            void logMonitor(EventType eventType, string eventName, Func<string> message) => log.Add($"[{eventType}] {eventName}: {message()}");
+            var logProvider = new ConsoleLogProvider(logMonitor);
+
+            var impersonationService = new ImpersonationService(httpContextAccessor, dataProtectionProvider, logProvider, options ?? new ImpersonationOptions(), baseUserInfo);
+            return (impersonationService, httpContextAccessor, log);
         }
 
         public static (ImpersonationService.AuthenticationInfo AuthenticationInfo, FakeCookie ResponseCookie, List<string> Log)

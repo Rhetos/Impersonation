@@ -19,10 +19,10 @@
 
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Rhetos.Impersonation;
+using Rhetos.Logging;
 using Rhetos.Utilities;
 using System;
 
@@ -34,20 +34,20 @@ namespace Rhetos.Host.AspNet.Impersonation
         private const string CookiePurpose = "Rhetos Impersonation";
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IDataProtectionProvider dataProtectionProvider;
-        private readonly ILogger<ImpersonationService> logger;
-        private readonly IOptions<ImpersonationOptions> options;
+        private readonly ILogger logger;
+        private readonly ImpersonationOptions options;
         private readonly BaseAuthentication baseUserInfo;
 
         public ImpersonationService(
             IHttpContextAccessor httpContextAccessor,
             IDataProtectionProvider dataProtectionProvider,
-            ILogger<ImpersonationService> logger,
-            IOptions<ImpersonationOptions> options,
+            ILogProvider logProvider,
+            ImpersonationOptions options,
             BaseAuthentication baseUserInfo)
         {
             this.httpContextAccessor = httpContextAccessor;
             this.dataProtectionProvider = dataProtectionProvider;
-            this.logger = logger;
+            this.logger = logProvider.GetLogger(GetType().Name);
             this.options = options;
             this.baseUserInfo = baseUserInfo;
         }
@@ -70,13 +70,13 @@ namespace Rhetos.Host.AspNet.Impersonation
             }
 
             var authenticatedUserName = (currentUserInfo as IImpersonationUserInfo)?.OriginalUsername ?? currentUserInfo.UserName;
-            logger.LogTrace("Impersonate: {authenticatedUserName} as {impersonatedUserName}", authenticatedUserName, impersonatedUserName);
+            logger.Trace(() => $"Impersonate: {authenticatedUserName} as {impersonatedUserName}");
 
             var impersonationInfo = new ImpersonationInfo()
             {
                 Authenticated = authenticatedUserName,
                 Impersonated = impersonatedUserName,
-                Expires = DateTime.Now.AddMinutes(options.Value.CookieDurationMinutes)
+                Expires = DateTime.Now.AddMinutes(options.CookieDurationMinutes)
             };
 
             SetCookie(impersonationInfo);
@@ -91,11 +91,11 @@ namespace Rhetos.Host.AspNet.Impersonation
                 var authentication = GetAuthenticationInfo();
                 cookieRemoved = authentication.CookieRemoved;
                 if (authentication.ImpersonationInfo != null)
-                    logger.LogTrace("StopImpersonating: {Authenticated} as {Impersonated}", authentication.ImpersonationInfo.Authenticated, authentication.ImpersonationInfo.Impersonated);
+                    logger.Trace(() => $"StopImpersonating: {authentication.ImpersonationInfo.Authenticated} as {authentication.ImpersonationInfo.Impersonated}");
             }
             catch (Exception e)
             {
-                logger.LogTrace(e, "Previous impersonation state not valid on " + nameof(RemoveImpersonation) + ".");
+                logger.Trace(() => $"Previous impersonation state not valid on {nameof(RemoveImpersonation)}. {e}");
             }
             
             // RemoveImpersonation should remove the impersonation cookie, even if the current impersonation state is invalid,
@@ -138,23 +138,23 @@ namespace Rhetos.Host.AspNet.Impersonation
 
             if (!originalUser.IsUserRecognized)
             {
-                logger.LogTrace("Removing impersonation, the original user is no longer authenticated.");
+                logger.Trace(() => "Removing impersonation, the original user is no longer authenticated.");
                 RemoveImpersonationCookie();
                 return new AuthenticationInfo(null, originalUser, true);
             }
 
             if (originalUser.UserName != impersonationInfo.Authenticated)
             {
-                logger.LogTrace("Removing impersonation, the current authentication context ({UserName}) does not match the initial one ({Authenticated}).", originalUser.UserName, impersonationInfo.Authenticated);
+                logger.Trace(() => $"Removing impersonation, the current authentication context ({originalUser.UserName}) does not match the initial one ({impersonationInfo.Authenticated}).");
                 RemoveImpersonationCookie();
                 return new AuthenticationInfo(null, originalUser, true);
             }
 
             // Sliding expiration: The cookie expiration time is updated when more than half the specified time has elapsed.
-            DateTime cookieCreated = impersonationInfo.Expires.AddMinutes(-options.Value.CookieDurationMinutes);
-            if ((DateTime.Now - cookieCreated).TotalMinutes > options.Value.CookieDurationMinutes / 2.0)
+            DateTime cookieCreated = impersonationInfo.Expires.AddMinutes(-options.CookieDurationMinutes);
+            if ((DateTime.Now - cookieCreated).TotalMinutes > options.CookieDurationMinutes / 2.0)
             {
-                impersonationInfo.Expires = DateTime.Now.AddMinutes(options.Value.CookieDurationMinutes);
+                impersonationInfo.Expires = DateTime.Now.AddMinutes(options.CookieDurationMinutes);
                 SetCookie(impersonationInfo);
             }
 

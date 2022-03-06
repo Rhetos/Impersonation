@@ -17,8 +17,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using Autofac;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Rhetos.Host.AspNet;
 using Rhetos.Host.AspNet.Impersonation;
 using Rhetos.Host.AspNet.Impersonation.ImpersonationDashboardSnippet;
@@ -40,10 +43,19 @@ namespace Rhetos
             }
 
             builder.AddRestApiFilters();
-            builder.Services.TryAddScoped<ImpersonationService>();
-            builder.Services.AddScoped<RhetosAspNetCoreIdentityUser>();
-            builder.Services.AddScoped<BaseAuthentication>(services => new BaseAuthentication(services.GetRequiredService<RhetosAspNetCoreIdentityUser>()));
-            builder.Services.AddScoped<IUserInfo>(services => services.GetRequiredService<ImpersonationService>().GetUserInfo());
+
+            builder.ConfigureRhetosHost((serviceProvider, rhetosHostBuilder) =>
+                rhetosHostBuilder.ConfigureContainer(containerBuilder =>
+                {
+                    containerBuilder.Register(_ => serviceProvider.GetRequiredService<IHttpContextAccessor>()).SingleInstance().ExternallyOwned();
+                    containerBuilder.Register(_ => serviceProvider.GetRequiredService<IDataProtectionProvider>()).SingleInstance().ExternallyOwned();
+                    containerBuilder.Register(_ => serviceProvider.GetRequiredService<IOptions<ImpersonationOptions>>().Value).SingleInstance().ExternallyOwned();
+
+                    containerBuilder.RegisterType<RhetosAspNetCoreIdentityUser>().InstancePerMatchingLifetimeScope(UnitOfWorkScope.ScopeName);
+                    containerBuilder.Register<BaseAuthentication>(context => new BaseAuthentication(context.Resolve<RhetosAspNetCoreIdentityUser>())).InstancePerMatchingLifetimeScope(UnitOfWorkScope.ScopeName);
+                    containerBuilder.RegisterType<ImpersonationService>().InstancePerMatchingLifetimeScope(UnitOfWorkScope.ScopeName);
+                    containerBuilder.Register<IUserInfo>(context => context.Resolve<ImpersonationService>().GetUserInfo()).InstancePerMatchingLifetimeScope(UnitOfWorkScope.ScopeName);
+                }));
 
             builder.Services.AddDataProtection();
             builder.Services.AddMvcCore()

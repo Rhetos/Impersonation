@@ -29,16 +29,16 @@ namespace Rhetos.Host.AspNet.Impersonation
     {
         private readonly IUserInfo userInfo;
         private readonly ImpersonationService impersonationService;
-        private readonly IRhetosComponent<ImpersonationContext> rhetosImpersonationContext;
+        private readonly ImpersonationContext impersonationContext;
 
         public ImpersonationController(
-            IUserInfo userInfo,
-            ImpersonationService impersonationService,
+            IRhetosComponent<IUserInfo> userInfo,
+            IRhetosComponent<ImpersonationService> impersonationService,
             IRhetosComponent<ImpersonationContext> rhetosImpersonationContext)
         {
-            this.userInfo = userInfo;
-            this.impersonationService = impersonationService;
-            this.rhetosImpersonationContext = rhetosImpersonationContext;
+            this.userInfo = userInfo.Value;
+            this.impersonationService = impersonationService.Value;
+            this.impersonationContext = rhetosImpersonationContext.Value;
         }
 
         public class ImpersonationModel
@@ -55,7 +55,7 @@ namespace Rhetos.Host.AspNet.Impersonation
             if (userInfo is IImpersonationUserInfo impersonationUser && impersonationUser.IsImpersonated)
                 throw new UserException("Can't impersonate, impersonation already active.");
 
-            rhetosImpersonationContext.Value.ValidateImpersonationPermissions(impersonationModel.UserName);
+            impersonationContext.ValidateImpersonationPermissions(impersonationModel.UserName);
 
             impersonationService.SetImpersonation(userInfo, impersonationModel.UserName);
         }
