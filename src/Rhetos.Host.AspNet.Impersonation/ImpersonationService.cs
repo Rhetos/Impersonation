@@ -19,12 +19,12 @@
 
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Rhetos.Impersonation;
 using Rhetos.Logging;
 using Rhetos.Utilities;
 using System;
+using System.Security.Cryptography;
 
 namespace Rhetos.Host.AspNet.Impersonation
 {
@@ -129,19 +129,30 @@ namespace Rhetos.Host.AspNet.Impersonation
             if (string.IsNullOrWhiteSpace(encryptedValue))
                 return new AuthenticationInfo(null, originalUser, false);
 
-            var impersonationInfo = DecryptValue(encryptedValue);
-            if (impersonationInfo == null)
-                return new AuthenticationInfo(null, originalUser, false);
-
-            if (DateTime.Now > impersonationInfo.Expires)
-                return new AuthenticationInfo(null, originalUser, false);
-
             if (!originalUser.IsUserRecognized)
             {
                 logger.Trace(() => "Removing impersonation, the original user is no longer authenticated.");
                 RemoveImpersonationCookie();
                 return new AuthenticationInfo(null, originalUser, true);
             }
+
+            ImpersonationInfo impersonationInfo;
+            try
+            {
+                impersonationInfo = DecryptValue(encryptedValue);
+            }
+            catch (CryptographicException ce)
+            {
+                logger.Error(() => $"Error decrypting '{CookieKey}' cookie value. {ce}");
+                RemoveImpersonationCookie();
+                return new AuthenticationInfo(null, originalUser, true);
+            }
+
+            if (impersonationInfo == null)
+                return new AuthenticationInfo(null, originalUser, false);
+                
+            if (DateTime.Now > impersonationInfo.Expires)
+                return new AuthenticationInfo(null, originalUser, false);
 
             if (originalUser.UserName != impersonationInfo.Authenticated)
             {

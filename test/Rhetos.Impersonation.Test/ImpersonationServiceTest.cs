@@ -218,7 +218,6 @@ namespace Rhetos.Impersonation.Test
             Assert.AreEqual(
                 "No impersonation, original not recognized",
                 ReportImpersonationStatus(authResponseAfterRemove.AuthenticationInfo));
-            Assert.IsNull(authResponseAfterRemove.ResponseCookie, "There is no need to send the expired cookie again, client already has the expired one.");
         }
 
         [TestMethod]
@@ -270,7 +269,6 @@ namespace Rhetos.Impersonation.Test
             Assert.AreEqual(
                 "No impersonation, original not recognized",
                 ReportImpersonationStatus(authResponseAfterRemove.AuthenticationInfo));
-            Assert.IsNull(authResponseAfterRemove.ResponseCookie, "There is no need to send the expired cookie again, client already has the expired one.");
         }
 
         [TestMethod]
@@ -351,6 +349,26 @@ namespace Rhetos.Impersonation.Test
             string errorMessage = $"Actual time s not within a second of expected time. Expected: {expected:O}, actual: {actual:O}.";
             Assert.IsTrue(expected.AddSeconds(-1) < actual, errorMessage);
             Assert.IsTrue(expected.AddSeconds(1) > actual, errorMessage);
+        }
+
+        [TestMethod]
+        public void InvalidImpersonationCookie()
+        {
+            var testUser = new FakeUserInfo("TestUser");
+            var invalidCookie = new FakeCookie(ImpersonationService.CookieKey, "abc", null);
+
+            var response = ImpersonationServiceHelper.GetAuthenticationInfo(testUser, invalidCookie);
+
+            Assert.AreEqual(
+                "No impersonation, original TestUser",
+                ReportImpersonationStatus(response.AuthenticationInfo));
+            TestUtility.AssertContains(
+                string.Join(Environment.NewLine, response.Log),
+                new[] {
+                    "Error decrypting 'rhetos_impersonation' cookie value.",
+                    "CryptographicException: An error occurred during a cryptographic operation."});
+            AssertIsBefore(response.ResponseCookie.Options.Expires.Value, DateTimeOffset.Now.AddSeconds(-1));
+            Assert.AreEqual(ImpersonationService.CookieKey, response.ResponseCookie.Key);
         }
     }
 }
