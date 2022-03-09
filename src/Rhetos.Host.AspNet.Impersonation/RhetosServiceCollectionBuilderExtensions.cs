@@ -32,6 +32,9 @@ namespace Rhetos
 {
     public static class RhetosServiceCollectionBuilderExtensions
     {
+        /// <summary>
+        /// Adds user impersonation components, including <see cref="IUserInfo"/> implementation for impersonated users and a dashboard snippet.
+        /// </summary>
         public static RhetosServiceCollectionBuilder AddImpersonation(this RhetosServiceCollectionBuilder builder, Action<ImpersonationOptions> configureOptions = null)
         {
             builder.Services.AddHttpContextAccessor();
