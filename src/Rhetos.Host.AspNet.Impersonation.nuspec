@@ -13,8 +13,8 @@
     <releaseNotes>
     </releaseNotes>
     <dependencies>
-      <dependency id="Rhetos.Host.AspNet" version="5.0.0-dev" />
-      <dependency id="Rhetos.RestGenerator" version="5.0.0-dev" />
+      <dependency id="Rhetos.Host.AspNet" version="5.0.0" />
+      <dependency id="Rhetos.RestGenerator" version="5.0.0" />
       <dependency id="Rhetos.Impersonation" version="5.0.0-dev" />
     </dependencies>
     <frameworkReferences>
