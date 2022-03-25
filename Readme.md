@@ -1,9 +1,9 @@
 # Rhetos Impersonation
 
-Rhetos.Impersonation is a DSL package (a plugin module) for [Rhetos development platform](https://github.com/Rhetos/Rhetos).
+**Rhetos.Impersonation** is a DSL package (a plugin module) for [Rhetos development platform](https://github.com/Rhetos/Rhetos).
 It provides functionality for impersonating another user in order to execute something with another user's permissions (for testing purposes) and/or behalf of another user.
 
-Rhetos.Host.AspNet.Impersonation is an extension of Rhetos.Impersonation, for Rhetos web applications with ASP.NET.
+**Rhetos.Host.AspNet.Impersonation** is an extension of Rhetos.Impersonation, for Rhetos web applications with ASP.NET.
 
 Contents:
 
@@ -17,13 +17,15 @@ See [rhetos.org](http://www.rhetos.org/) for more information on Rhetos.
 
 ## Installation and configuration
 
-Installing this package to a web application that uses Rhetos impersonation:
+Installing this package to a **library** built with Rhetos that doesn't contain web API:
+
+1. Add "**Rhetos.Impersonation**" NuGet package, available at the [NuGet.org](https://www.nuget.org/) on-line gallery.
+
+Installing this package to a **web application** that uses Rhetos impersonation:
 
 1. Add "**Rhetos.Host.AspNet.Impersonation**" NuGet package, available at the [NuGet.org](https://www.nuget.org/) on-line gallery.
 2. Extend the Rhetos services configuration (at `services.AddRhetosHost`) with the impersonation service: `.AddImpersonation()`.
 3. Extend the application with new endpoints : `.UseRhetosImpersonation()` in the `Startup.Configure` method. It is important to call `.UseRhetosImpersonation()` before `.UseEndpoints()`.
-
-If there is a separate library built with Rhetos, add **Rhetos.Impersonation** NuGet package to the library project.
 
 Configure impersonation options in `AddImpersonation` delegate parameter.
 See [ImpersonationOptions](https://github.com/Rhetos/Impersonation/blob/master/src/Rhetos.Host.AspNet.Impersonation/ImpersonationOptions.cs) class.
