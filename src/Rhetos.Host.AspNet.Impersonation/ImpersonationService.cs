@@ -124,7 +124,7 @@ namespace Rhetos.Host.AspNet.Impersonation
         {
             var originalUser = baseUserInfo.UserInfo;
 
-            var encryptedValue = httpContextAccessor.HttpContext.Request.Cookies[CookieKey];
+            var encryptedValue = httpContextAccessor.HttpContext?.Request.Cookies[CookieKey];
 
             if (string.IsNullOrWhiteSpace(encryptedValue))
                 return new AuthenticationInfo(null, originalUser, false);
@@ -184,6 +184,9 @@ namespace Rhetos.Host.AspNet.Impersonation
 
         private void AppendCookie(ImpersonationInfo impersonationInfo, bool remove)
         {
+            if (httpContextAccessor.HttpContext == null) // Unit tests or CLI utilities.
+                return;
+
             string encryptedValue = EncryptValue(impersonationInfo);
             var expires = remove ? DateTimeOffset.Now.AddDays(-10) : (DateTimeOffset?)null; // Marks cookie as expired. This instructs browser to remove the cookie from the client.
             var cookieOptions = new CookieOptions() { HttpOnly = true, Expires = expires };
