@@ -1,6 +1,6 @@
 # Rhetos.Impersonation Release notes
 
-## 5.1.0 (TO BE RELEASED)
+## 5.1.0 (2022-04-08)
 
 * Bugfix: NullReferenceException may occur if there is no HttpContext active, for example in a CLI utility.
 
