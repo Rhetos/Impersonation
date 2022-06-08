@@ -1,7 +1,7 @@
 # Rhetos Impersonation
 
 **Rhetos.Impersonation** is a DSL package (a plugin module) for [Rhetos development platform](https://github.com/Rhetos/Rhetos).
-It provides functionality for impersonating another user in order to execute something with another user's permissions (for testing purposes) and/or behalf of another user.
+It provides a safe way for specified users to log in as another user for debugging and support.
 
 **Rhetos.Host.AspNet.Impersonation** is an extension of Rhetos.Impersonation, for Rhetos web applications with ASP.NET.
 

@@ -7,7 +7,7 @@
     <owners>Omega software</owners>
     <projectUrl>https://github.com/rhetos/rhetos</projectUrl>
     <description>This package is a plugin for Rhetos development platform.
-	It provides functionality for impersonating another user in order to execute something with another user's permissions (for testing purposes) and/or behalf of another user.</description>
+	It provides a safe way for specified users to log in as another user for debugging and support.</description>
     <copyright>Copyright Omega software 2019</copyright>
     <tags>Rhetos plugin</tags>
     <releaseNotes>
