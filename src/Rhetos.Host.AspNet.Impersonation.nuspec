@@ -13,12 +13,12 @@
     <releaseNotes>
     </releaseNotes>
     <dependencies>
-      <dependency id="Rhetos.Host.AspNet" version="5.0.0" />
-      <dependency id="Rhetos.RestGenerator" version="5.0.0" />
+      <dependency id="Rhetos.Host.AspNet" version="6.0.0-dev24011711054c6feb" />
+      <dependency id="Rhetos.RestGenerator" version="6.0.0-dev24011711267bd4d47" />
       <dependency id="Rhetos.Impersonation" version="6.0.0-dev" />
     </dependencies>
     <frameworkReferences>
-      <group targetFramework="net5.0">
+      <group targetFramework="net8.0">
         <frameworkReference name="Microsoft.AspNetCore.App" />
       </group>
     </frameworkReferences>
@@ -26,8 +26,8 @@
   <files>
     <file src="..\Readme.md" target="" />
     <file src="..\ChangeLog.md" target="" />
-    <file src="Rhetos.Host.AspNet.Impersonation\bin\Debug\net5.0\Rhetos.Host.AspNet.Impersonation.dll" target="lib\net5.0" />
-    <file src="Rhetos.Host.AspNet.Impersonation\bin\Debug\net5.0\Rhetos.Host.AspNet.Impersonation.pdb" target="lib\net5.0" />
-    <file src="Rhetos.Host.AspNet.Impersonation\bin\Debug\net5.0\Rhetos.Host.AspNet.Impersonation.xml" target="lib\net5.0" />
+    <file src="Rhetos.Host.AspNet.Impersonation\bin\Debug\net8.0\Rhetos.Host.AspNet.Impersonation.dll" target="lib\net8.0" />
+    <file src="Rhetos.Host.AspNet.Impersonation\bin\Debug\net8.0\Rhetos.Host.AspNet.Impersonation.pdb" target="lib\net8.0" />
+    <file src="Rhetos.Host.AspNet.Impersonation\bin\Debug\net8.0\Rhetos.Host.AspNet.Impersonation.xml" target="lib\net8.0" />
   </files>
 </package>
