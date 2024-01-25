@@ -5,6 +5,7 @@
     <version>6.0.0-dev</version>
     <authors>Omega software</authors>
     <owners>Omega software</owners>
+    <license type="expression">AGPL-3.0-only</license>
     <projectUrl>https://github.com/rhetos/rhetos</projectUrl>
     <description>This package is a plugin for Rhetos development platform.
 	It provides a safe way for specified users to log in as another user for debugging and support.</description>
@@ -13,8 +14,10 @@
     <releaseNotes>
     </releaseNotes>
     <dependencies>
-      <dependency id="Rhetos" version="6.0.0-dev24011711054c6feb" />
-      <dependency id="Rhetos.CommonConcepts" version="6.0.0-dev24011711054c6feb" />
+      <group targetFramework="net8.0">
+        <dependency id="Rhetos" version="6.0.0-dev24011711054c6feb" />
+        <dependency id="Rhetos.CommonConcepts" version="6.0.0-dev24011711054c6feb" />
+      </group>
     </dependencies>
   </metadata>
   <files>
