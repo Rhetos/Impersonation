@@ -9,14 +9,16 @@
     <projectUrl>https://github.com/rhetos/rhetos</projectUrl>
     <description>This package is a plugin for Rhetos development platform.
 	It provides functionality for impersonating another user in order to execute something with another user's permissions (for testing purposes) and/or behalf of another user.</description>
+    <readme>docs\Readme.md</readme>
     <copyright>Copyright Omega software 2019</copyright>
     <tags>Rhetos plugin</tags>
     <releaseNotes>
     </releaseNotes>
     <dependencies>
       <group targetFramework="net8.0">
-        <dependency id="Rhetos.Host.AspNet" version="6.0.0-dev24011711054c6feb" />
-        <dependency id="Rhetos.RestGenerator" version="6.0.0-dev24011711267bd4d47" />
+        <dependency id="Rhetos.CommonConcepts" version="6.0.0" />
+        <dependency id="Rhetos.Host.AspNet" version="6.0.0" />
+        <dependency id="Rhetos.RestGenerator" version="6.0.0" />
         <dependency id="Rhetos.Impersonation" version="6.0.0-dev" />
       </group>
     </dependencies>
@@ -27,7 +29,7 @@
     </frameworkReferences>
   </metadata>
   <files>
-    <file src="..\Readme.md" target="" />
+    <file src="..\Readme.md" target="docs" />
     <file src="..\ChangeLog.md" target="" />
     <file src="Rhetos.Host.AspNet.Impersonation\bin\Debug\net8.0\Rhetos.Host.AspNet.Impersonation.dll" target="lib\net8.0" />
     <file src="Rhetos.Host.AspNet.Impersonation\bin\Debug\net8.0\Rhetos.Host.AspNet.Impersonation.pdb" target="lib\net8.0" />

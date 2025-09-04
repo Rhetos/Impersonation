@@ -9,19 +9,20 @@
     <projectUrl>https://github.com/rhetos/rhetos</projectUrl>
     <description>This package is a plugin for Rhetos development platform.
 	It provides a safe way for specified users to log in as another user for debugging and support.</description>
+    <readme>docs\Readme.md</readme>
     <copyright>Copyright Omega software 2019</copyright>
     <tags>Rhetos plugin</tags>
     <releaseNotes>
     </releaseNotes>
     <dependencies>
       <group targetFramework="net8.0">
-        <dependency id="Rhetos" version="6.0.0-dev24011711054c6feb" />
-        <dependency id="Rhetos.CommonConcepts" version="6.0.0-dev24011711054c6feb" />
+        <dependency id="Rhetos" version="6.0.0" />
+        <dependency id="Rhetos.CommonConcepts" version="6.0.0" />
       </group>
     </dependencies>
   </metadata>
   <files>
-    <file src="..\Readme.md" target="" />
+    <file src="..\Readme.md" target="docs" />
     <file src="..\ChangeLog.md" target="" />
     <file src="DslScripts\**\*" target="DslScripts" />
     <file src="Rhetos.Impersonation\bin\Debug\net8.0\Rhetos.Impersonation.dll" target="lib\net8.0" />
