@@ -13,7 +13,7 @@ Contents:
 4. [How to contribute](#how-to-contribute)
    1. [Building and testing the source code](#building-and-testing-the-source-code)
 
-See [rhetos.org](http://www.rhetos.org/) for more information on Rhetos.
+See <https://github.com/Rhetos/Rhetos> for more information on Rhetos.
 
 ## Installation and configuration
 
